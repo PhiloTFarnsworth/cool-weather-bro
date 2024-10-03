@@ -26,7 +26,7 @@ class WorldMap extends HTMLElement {
         this._olMapView = new ol.View({
             center: ol.proj.fromLonLat([0, 50]),
             zoom: 1,
-            maxZoom: 8
+            // maxZoom: 8
         })
         this._olMap = new ol.Map({
             layers: [
@@ -99,22 +99,42 @@ class WorldMap extends HTMLElement {
                     }
                 })
 
-                this._olMapView.animate({
-                    center: ol.extent.getCenter(source.getExtent()),
-                    zoom: 6,
-                    duration: 1000,
-                    extent: source.getExtent()
-                })
+                // this._olMapView.animate({
+                //     center: ol.extent.getCenter(source.getExtent()),
+                //     zoom: 6,
+                //     duration: 1000,
+                //     extent: source.getExtent()
+                // })
             })
         })
     }
 
-    adoptedCallback() {
-        console.log("Custom element moved to new page.");
-    }
-
     attributeChangedCallback(name, oldValue, newValue) {
         console.log(`Attribute ${name} has changed.`);
+        if (name == "data-long" || name == "data-lat") {
+            const long = this.getAttribute("data-long")
+            const lat = this.getAttribute("data-lat")
+            if (long && lat) {
+                const point = new ol.geom.Point(ol.proj.fromLonLat([Number(long), Number(lat)]));
+                const locationLayer = new ol.layer.Vector({
+                    source: new ol.source.Vector({
+                      features: [new ol.Feature(point)]
+                    }),
+                    style: new ol.style.Style({
+                        image: new ol.style.Circle({
+                            radius: 10,
+                            fill: new ol.style.Fill({ color: 'rgba(255, 0, 255, .5)' })
+                        }),
+                    }),
+                  })
+                this._olMap.addLayer(locationLayer)
+                this._olMapView.animate({
+                    center: ol.proj.fromLonLat([Number(long), Number(lat)]),
+                    zoom: 16,
+                    duration: 5000
+                })
+            }
+        }
     }
 }
 
