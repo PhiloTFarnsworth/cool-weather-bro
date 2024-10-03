@@ -4,7 +4,7 @@ class PageContent extends HTMLElement {
   }
 
   connectedCallback() {
-    const shadow = this.attachShadow({mode: "closed"});
+    const shadow = this.attachShadow({ mode: "closed" });
     //Simple Div
     const pageContainer = document.createElement('div')
     pageContainer.className = "page-container"
@@ -30,14 +30,21 @@ class PageContent extends HTMLElement {
       /* geolocation is available */
       console.log("geolocation")
       navigator.geolocation.getCurrentPosition((position) => {
-        const location = {lat: position.coords.latitude, long: position.coords.longitude}
+        const location = { lat: position.coords.latitude, long: position.coords.longitude }
         localStorage.setItem("location", JSON.stringify(location))
+        console.log(location)
+        let slottedElements = contentSlot.assignedElements()
+        slottedElements.forEach(el => {
+          el.dataset.lat = position.coords.latitude
+          el.dataset.long = position.coords.longitude
+        })
+
       })
     } else {
       /* geolocation IS NOT available */
       console.log("no Geo!")
-      
-    }    
+
+    }
   }
 }
 
