@@ -1,4 +1,4 @@
-let olMap
+import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
 
 class WorldMap extends HTMLElement {
     static observedAttributes = ["id", "data-lat", "data-long"]
@@ -6,6 +6,9 @@ class WorldMap extends HTMLElement {
     constructor() {
         super();
 
+        document.addEventListener("locationUpdated", (e) => {
+            console.log(e)
+        })
         const shadow = this.attachShadow({ mode: "open" })
         const map = document.createElement("div")
         map.style.height = "100%"
@@ -24,8 +27,8 @@ class WorldMap extends HTMLElement {
 
         shadow.appendChild(infoBox)
         this._olMapView = new ol.View({
-            center: ol.proj.fromLonLat([0, 50]),
-            zoom: 1,
+            center: ol.proj.fromLonLat([-100, 50]),
+            zoom: 2.5,
             // maxZoom: 8
         })
         this._olMap = new ol.Map({
@@ -41,7 +44,6 @@ class WorldMap extends HTMLElement {
     }
 
     connectedCallback() {
-
         fetch("https://api.weather.gov/stations?state=AZ").then(result => result.json()).then(result => {
             fetch('../../static/data/world/countries/USA/AZ.geo.json').then(res => res.json()).then(res => {
                 const stateFeatures = new ol.format.GeoJSON().readFeatures(res, { featureProjection: 'EPSG:3857' })
@@ -98,13 +100,6 @@ class WorldMap extends HTMLElement {
                         this.shadowRoot.querySelector("#" + this.getAttribute("id") + "-infobox").innerText = ""
                     }
                 })
-
-                // this._olMapView.animate({
-                //     center: ol.extent.getCenter(source.getExtent()),
-                //     zoom: 6,
-                //     duration: 1000,
-                //     extent: source.getExtent()
-                // })
             })
         })
     }

@@ -1,16 +1,15 @@
 class PageContent extends HTMLElement {
   constructor() {
     super();
-  }
 
-  connectedCallback() {
-    const shadow = this.attachShadow({ mode: "closed" });
+    const shadow = this.attachShadow({ mode: "open" });
     //Simple Div
     const pageContainer = document.createElement('div')
     pageContainer.className = "page-container"
 
     //Slot for content
     const contentSlot = document.createElement("slot")
+    contentSlot.id = "page-slot"
     contentSlot.name = "page-slot"
     contentSlot.innerHTML = `<p>Content?</p>`
 
@@ -25,7 +24,9 @@ class PageContent extends HTMLElement {
     pageContainer.appendChild(contentSlot)
     shadow.appendChild(pageContainer)
     shadow.appendChild(style)
+  }
 
+  connectedCallback() {
     if ("geolocation" in navigator) {
       /* geolocation is available */
       console.log("geolocation")
@@ -33,7 +34,7 @@ class PageContent extends HTMLElement {
         const location = { lat: position.coords.latitude, long: position.coords.longitude }
         localStorage.setItem("location", JSON.stringify(location))
         console.log(location)
-        let slottedElements = contentSlot.assignedElements()
+        let slottedElements = this.shadowRoot.querySelector("#page-slot").assignedElements()
         slottedElements.forEach(el => {
           el.dataset.lat = position.coords.latitude
           el.dataset.long = position.coords.longitude
@@ -43,7 +44,6 @@ class PageContent extends HTMLElement {
     } else {
       /* geolocation IS NOT available */
       console.log("no Geo!")
-
     }
   }
 }

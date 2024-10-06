@@ -5,6 +5,8 @@ class Header extends HTMLElement {
 
     connectedCallback() {
         const shadow = this.attachShadow({ mode: "closed" });
+
+
         //Simple Div
         const headerContainer = document.createElement('div')
         headerContainer.className = "header-container"
@@ -16,15 +18,19 @@ class Header extends HTMLElement {
         const locationSlot = document.createElement("slot")
         locationSlot.innerHTML = `<span>Loading...</span>`
         locationSlot.name = "location-slot"
-        header.appendChild(locationSlot)
+        headerContainer.appendChild(locationSlot)
 
 
         const style = document.createElement('style')
         style.innerText = `
           .header-container {
             width: 100%;
-            height: 50px;
+            height: 100px;
             background-color: #5555FF;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
           }
 
           h1 {
