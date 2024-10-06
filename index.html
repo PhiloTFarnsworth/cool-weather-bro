@@ -5,20 +5,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whether the weather will favor the heathers</title>
-    <link rel="stylesheet" href="./static/globalStyles.css"
-    <script type="module" src="./components/layout/PageContent.js"></script>
+    <link rel="stylesheet" href="./static/globalStyles.css" <script type="module"
+        src="./components/layout/PageContent.js">
+    </script>
     <script type="module" src="./components/layout/Header.js"></script>
     <script type="module" src="./components/widgets/map.js"></script>
-    <script type="module" src="./components/widgets/locationWidget.js"></script> 
+    <script type="module" src="./components/widgets/locationWidget.js"></script>
+    <script type="module" src="./components/widgets/dashboard.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
     <script type="module">
         import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
         //Prepare USA state and county data
-        fetch("./static/data/USAMeta.json").then(res => res.json()).then(res => {
-            set("counties", res.metaTuples.filter(([x, y]) => x !== "state"))
-            set("states", res.metaTuples.filter(([x, y]) => x == "state"))
-        })
+        fetch("./static/data/USAMeta.json")
+            .then(res => res.json())
+            .then(res => {
+                set("states", res.metaTuples.filter(([x, y]) => x == "state"))
+            })
+
+        fetch("https://api.weather.gov/zones/county")
+            .then(res => res.json())
+            .then(res => {
+                set("counties", res.features.map(r => {
+                    return {
+                        state: r.properties.state,
+                        name: r.properties.name,
+                        url: r.properties["@id"],
+                        offices: r.properties.forecastOffices
+                    }
+                }))
+            })
 
         if ("geolocation" in navigator) {
             /* geolocation is available */
@@ -26,7 +42,7 @@
             navigator.geolocation.getCurrentPosition((position) => {
                 const location = { lat: position.coords.latitude, long: position.coords.longitude }
                 localStorage.setItem("location", JSON.stringify(location))
-                document.dispatchEvent(new CustomEvent("locationUpdated", {detail: location}))
+                console.log(location)
             })
         } else {
             /* geolocation IS NOT available */
@@ -51,12 +67,11 @@
 </style>
 
 <body>
+    <weather-header slot="page-slot">
+        <location-widget id="location-widget" slot="location-slot"></location-widget>
+    </weather-header>
     <page-content>
-        <weather-header slot="page-slot">
-            <location-widget id="location-widget" slot="location-slot"></location-widget>
-        </weather-header>
-        <p slot="page-slot">Look at me I'm content</p>
-        </world-map>
+        <weather-dashboard id="weather-dashboard" slot="page-slot"></weather-dashboard>
     </page-content>
 </body>
 

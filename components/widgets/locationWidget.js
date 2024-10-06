@@ -3,7 +3,7 @@ import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class LocationWidget extends HTMLElement {
-    static observedAttributes = ["id", "data-state", "data-county", "data-station"]
+    static observedAttributes = ["data-state", "data-county", "data-station"]
 
     constructor() {
         super();
@@ -57,12 +57,12 @@ class LocationWidget extends HTMLElement {
         stateSelect.appendChild(chooseOption)
 
         get("states").then(res => {
-            res.filter(r => r[0] === "state").forEach(r => {
+            res.filter(r => r[0] === "state").forEach((r, i) => {
                 const stateOption = document.createElement("option")
                 stateOption.value = r[1]
                 stateOption.innerText = r[1]
                 if (r[1] === stateAttr) {
-                    stateOption.selected = true
+                    stateSelect.selectedIndex = i
                 }
                 stateSelect.appendChild(stateOption)
             })
@@ -93,9 +93,17 @@ class LocationWidget extends HTMLElement {
         stationSelectLabel.append(stationSelect)
 
         // Need the data from the station select to populate map, so need to interrupt with some map stuff
+        const mapComboContainer = document.createElement("div")
+        mapComboContainer.id = "map-combo-container"
+        dialogContainer.appendChild(mapComboContainer)
+
         const map = document.createElement("div")
         map.id = "location-map"
-        dialogContainer.appendChild(map)
+        mapComboContainer.appendChild(map)
+
+        const mapInfoBar = document.createElement("div")
+        mapInfoBar.id = "map-info-bar"
+        mapComboContainer.appendChild(mapInfoBar)
 
         this._olMapView = new ol.View({
             center: ol.proj.fromLonLat([-100, 40]),
@@ -140,12 +148,12 @@ class LocationWidget extends HTMLElement {
                 const selectedStation = document.querySelector("#location-widget").getAttribute("data-station")
                 return feature.get('name') === selectedStation ? new ol.style.Style({
                     image: new ol.style.Circle({
-                        radius: 4,
+                        radius: 12,
                         fill: new ol.style.Fill({ color: 'rgba(255, 0, 255, .5)' })
                     }),
                 }) : new ol.style.Style({
                     image: new ol.style.Circle({
-                        radius: 3,
+                        radius: 10,
                         fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, .5)' })
                     }),
                 })
@@ -154,6 +162,40 @@ class LocationWidget extends HTMLElement {
         })
 
         this._olMap.addLayer(stationsVector)
+
+        this._olMap.on("pointermove", (e) => {
+
+            const pixel = this._olMap.getEventPixel(e.originalEvent);
+            const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
+                ? undefined
+                : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
+                    return feature;
+                });
+
+            if (feature && feature.get("@type")) {
+                const featureName = feature.get("name")
+                if (featureName) {
+                    this.shadowRoot.querySelector("#map-info-bar").innerText = featureName
+                }
+            }
+        })
+
+        this._olMap.on("click", (e) => {
+
+            const pixel = this._olMap.getEventPixel(e.originalEvent);
+            const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
+                ? undefined
+                : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
+                    return feature;
+                });
+
+            if (feature && feature.get("@type")) {
+                const featureName = feature.get("name")
+                if (featureName) {
+                    this.setAttribute("data-station", featureName)
+                }
+            }
+        })
 
         this._olMap.render()
 
@@ -204,10 +246,26 @@ class LocationWidget extends HTMLElement {
             flex-direction: column;
           }
 
-          #location-map {
+          #map-info-bar {
+            position: absolute;
+            top: 0;
+            backgroundColor: blue;
+            height: 30px;
+            width: 100%;
+          }
+
+          #map-combo-container{
+            position: relative;
             min-height: 300px;
             min-width: 300px;
             height: calc(100% - 200px);
+            width: 100%;
+          }
+          
+          #location-map {
+            min-height: 300px;
+            min-width: 300px;
+            height: 100%;
             width: 100%;
           }
 
@@ -256,19 +314,19 @@ class LocationWidget extends HTMLElement {
                     }
 
                     let countySelection = false
-                    res.filter(r => r[0] === stateAttr).forEach(r => {
+                    res.filter(r => r.state === stateAttr).forEach((r, i) => {
                         const countyOption = document.createElement("option")
-                        countyOption.value = r[1]
-                        countyOption.innerText = r[1]
-                        if (r[1] === countyAttr) {
-                            countyOption.selected = true
+                        countyOption.value = r.name
+                        countyOption.innerText = r.name
+                        if (r.name === countyAttr) {
+                            countySelect.selectedIndex = i
                             countySelection = true
                         }
                         countySelect.appendChild(countyOption)
                     })
 
                     if (!countySelection) {
-                        countySelect.firstChild.selected = true
+                        countySelect.selectedIndex = 0
                         this.setAttribute("data-county", countySelect.firstChild.value)
                     }
                     countySelect.disabled = false
@@ -290,76 +348,70 @@ class LocationWidget extends HTMLElement {
 
         if (name === "data-county" && oldValue !== newValue) {
             if (newValue && newValue !== "undefined") {
-                fetch(`../../static/data/world/countries/USA/${stateAttr}/${newValue}.geo.json`)
-                    .then(res => res.json())
-                    .then(res => {
-                        const countyFeatures = new ol.format.GeoJSON().readFeatures(res, { featureProjection: 'EPSG:3857' })
-                        const countyFeaturesCollection = new ol.Collection(countyFeatures)
-                        const source = new ol.source.Vector({ features: countyFeaturesCollection })
-                        this._olMap.getLayers().array_.forEach(layer => {
-                            if (layer.get('name') && layer.get('name') == 'county-outline') {
-                                layer.setSource(source)
-                            }
-                        });
-
-                        this._olMapView.animate({
-                            center: ol.extent.getCenter(source.getExtent()),
-                            zoom: 7,
-                            duration: 1000
-                        })
-                    })
-
-                //Get list of zones, since you can't just refer to county on a state query without knowing the county designations 
-                // though you do get the county as a plain string if you query by coordinates (Maybe a false memory?)
-                fetch(`https://api.weather.gov/zones/?area=${stateAttr}`)
-                    .then(res => res.json())
-                    .then(res => {
-                        const thisCounty = res.features.find(f => f.properties.name === newValue)
-                        console.log(thisCounty)
-                        //Once you have the county, you can then sort through stations by state
-                        fetch(`https://api.weather.gov/stations/?state=${stateAttr}`)
-                            .then(res => res.json())
-                            .then(res => {
-
-                                const countyStations = res.features.filter(f => f.properties.county === thisCounty.id)
-                                const observationStations = countyStations.filter(c => res.observationStations.includes(c.id))
-                                //Observation stations are what we need to populate a dashboard
-                                const didSelect = false
-                                const stationSelect = this.shadowRoot.querySelector(`#station-select`)
-                                //Clear old stations
-                                while (stationSelect.firstChild) {
-                                    stationSelect.removeChild(stationSelect.lastChild)
+                get("counties").then(counties => {
+                    const thisCounty = counties.find(r => r.name === newValue && r.state === stateAttr)
+                    fetch(thisCounty.url)
+                        .then(res => res.json())
+                        .then(res => {
+                            const countyFeatures = new ol.format.GeoJSON().readFeatures(res, { featureProjection: 'EPSG:3857' })
+                            const countyFeaturesCollection = new ol.Collection(countyFeatures)
+                            const source = new ol.source.Vector({ features: countyFeaturesCollection })
+                            this._olMap.getLayers().array_.forEach(layer => {
+                                if (layer.get('name') && layer.get('name') == 'county-outline') {
+                                    layer.setSource(source)
                                 }
-                                observationStations.forEach(o => {
-                                    const stationOption = document.createElement("option")
-                                    stationOption.value = o.properties.name
-                                    stationOption.innerText = o.properties.name
-                                    if (o[1] === stationAttr) {
-                                        stationOption.selected = true
-                                        didSelect = true
-                                    }
-                                    stationSelect.appendChild(stationOption)
-                                    stationSelect.disabled = false
-                                })
+                            });
 
-                                if (!didSelect) {
-                                    this.setAttribute("data-station", stationSelect.firstChild.value)
-                                    stationSelect.firstChild.selected = true
-                                }
-
-                                const fakeJson = { type: "FeatureCollection", features: observationStations }
-
-                                const stationFeatures = new ol.format.GeoJSON().readFeatures(fakeJson, { featureProjection: 'EPSG:3857' })
-                                const stationFeaturesCollection = new ol.Collection(stationFeatures)
-                                const source = new ol.source.Vector({ features: stationFeaturesCollection })
-
-                                this._olMap.getLayers().array_.forEach(layer => {
-                                    if (layer.get('name') && layer.get('name') == 'stations') {
-                                        layer.setSource(source)
-                                    }
-                                });
+                            this._olMapView.animate({
+                                center: ol.extent.getCenter(source.getExtent()),
+                                zoom: 7,
+                                duration: 1000
                             })
-                    })
+                        })
+                    fetch(`https://api.weather.gov/stations/?state=${stateAttr}`)
+                        .then(res => res.json())
+                        .then(res => {
+
+                            const countyStations = res.features.filter(f => f.properties.county === thisCounty.url)
+                            const observationStations = countyStations.filter(c => res.observationStations.includes(c.id))
+                            set("stations", observationStations)
+                            //Observation stations are what we need to populate a dashboard
+                            const didSelect = false
+                            const stationSelect = this.shadowRoot.querySelector(`#station-select`)
+                            //Clear old stations
+                            while (stationSelect.firstChild) {
+                                stationSelect.removeChild(stationSelect.lastChild)
+                            }
+                            observationStations.forEach((o, i) => {
+                                const stationOption = document.createElement("option")
+                                stationOption.value = o.properties.name
+                                stationOption.innerText = o.properties.name
+                                if (o[1] === stationAttr) {
+                                    stationSelect.selectedIndex = i
+                                    didSelect = true
+                                }
+                                stationSelect.appendChild(stationOption)
+                                stationSelect.disabled = false
+                            })
+
+                            if (!didSelect && observationStations.length > 0) {
+                                this.setAttribute("data-station", stationSelect.firstChild.value)
+                                stationSelect.selectedIndex = 0
+                            }
+
+                            const fakeJson = { type: "FeatureCollection", features: observationStations }
+
+                            const stationFeatures = new ol.format.GeoJSON().readFeatures(fakeJson, { featureProjection: 'EPSG:3857' })
+                            const stationFeaturesCollection = new ol.Collection(stationFeatures)
+                            const source = new ol.source.Vector({ features: stationFeaturesCollection })
+
+                            this._olMap.getLayers().array_.forEach(layer => {
+                                if (layer.get('name') && layer.get('name') == 'stations') {
+                                    layer.setSource(source)
+                                }
+                            });
+                        })
+                })
             } else {
                 this._olMap.getLayers().array_.forEach(layer => {
                     if (layer.get('name') && (layer.get('name') == 'stations') || layer.get('name') == 'county-outline') {
@@ -370,14 +422,25 @@ class LocationWidget extends HTMLElement {
         }
 
         if (name === "data-station" && oldValue !== newValue) {
+            get("stations").then(res => {
+                document.dispatchEvent(new CustomEvent("stationChange", {detail: res.find(r => newValue === r.properties.name)}))
+            })
             //Updates style function in the layer, so it looks for the new selected value
             this._olMap.getLayers().array_.forEach(layer => {
                 if (layer.get('name') && layer.get('name') == 'stations') {
                     layer.changed()
                 }
             });
-
             this.shadowRoot.querySelector("#station-label").innerText = newValue
+            const stationSelect = this.shadowRoot.querySelector(`#station-select`)
+            const selectables = stationSelect.childNodes
+            let selectIndex = 0
+            selectables.forEach((c, i) => {
+                if (c.value === newValue) {
+                    selectIndex = i
+                }
+            })
+            stationSelect.selectedIndex = selectIndex
         }
     }
 }
