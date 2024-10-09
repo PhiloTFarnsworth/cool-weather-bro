@@ -14,7 +14,8 @@ class WeatherDashboard extends HTMLElement {
         shadow.appendChild(dashboardContainer)
         document.addEventListener("stationChange", (e) => {
             console.log(e)
-            this.setAttribute("data-station-id", e.detail.properties.id)
+            console.log(e.detail.properties.stationIdentifier)
+            this.setAttribute("data-station-id", e.detail.properties.stationIdentifier)
         })
     }
 
@@ -25,11 +26,7 @@ class WeatherDashboard extends HTMLElement {
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === "data-station-id" && newValue) {
-            fetch("")
-                .then(res => res.json())
-                .then(res => {
-                    this.shadowRoot.querySelector("#dashboard-container").innerText = JSON.stringify(res, 2)
-                })
+
         }
     }
 

@@ -80,17 +80,9 @@ class LocationWidget extends HTMLElement {
         countySelect.disabled = true
         countySelectLabel.appendChild(countySelect)
 
-        const stationSelectLabel = document.createElement("label")
-        stationSelectLabel.innerText = "Select Station"
-        stationSelectForm.appendChild(stationSelectLabel)
-
-        const stationSelect = document.createElement("select")
-        stationSelect.addEventListener("change", (e) => {
-            this.setAttribute("data-station", e.target.value)
-        })
-        stationSelect.id = "station-select"
-        stationSelect.disabled = true
-        stationSelectLabel.append(stationSelect)
+        const locationDisplay = document.createElement("p")
+        locationDisplay.id = "location-display"
+        stationSelectForm.appendChild(locationDisplay)
 
         // Need the data from the station select to populate map, so need to interrupt with some map stuff
         const mapComboContainer = document.createElement("div")
@@ -143,58 +135,44 @@ class LocationWidget extends HTMLElement {
         })
         this._olMap.addLayer(countyVector)
 
-        const stationsVector = new ol.layer.Vector({
-            style: function (feature, resolution) {
-                const selectedStation = document.querySelector("#location-widget").getAttribute("data-station")
-                return feature.get('name') === selectedStation ? new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 12,
-                        fill: new ol.style.Fill({ color: 'rgba(255, 0, 255, .5)' })
-                    }),
-                }) : new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 10,
-                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, .5)' })
-                    }),
-                })
-            },
-            properties: { name: "stations" }
+        const locationVector = new ol.layer.Vector({
+            style: new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 12,
+                    fill: new ol.style.Fill({ color: 'rgba(255, 0, 0, .75)' })
+                }),
+            }),
+            properties: { name: "location" }
         })
 
-        this._olMap.addLayer(stationsVector)
+        this._olMap.addLayer(locationVector)
 
         this._olMap.on("pointermove", (e) => {
 
-            const pixel = this._olMap.getEventPixel(e.originalEvent);
-            const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
-                ? undefined
-                : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
-                    return feature;
-                });
+            // const pixel = this._olMap.getEventPixel(e.originalEvent);
+            // const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
+            //     ? undefined
+            //     : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
+            //         return feature;
+            //     });
 
-            if (feature && feature.get("@type")) {
-                const featureName = feature.get("name")
-                if (featureName) {
-                    this.shadowRoot.querySelector("#map-info-bar").innerText = featureName
-                }
-            }
+            // if (feature && feature.get("@type")) {
+            //     const featureName = feature.get("name")
+            //     if (featureName) {
+            //         this.shadowRoot.querySelector("#map-info-bar").innerText = featureName
+            //     }
+            // }
         })
 
         this._olMap.on("click", (e) => {
+            const marker = new ol.Feature(new ol.geom.Point(e.coordinate));
+            const source = new ol.source.Vector({ features: [marker]})
 
-            const pixel = this._olMap.getEventPixel(e.originalEvent);
-            const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
-                ? undefined
-                : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
-                    return feature;
-                });
-
-            if (feature && feature.get("@type")) {
-                const featureName = feature.get("name")
-                if (featureName) {
-                    this.setAttribute("data-station", featureName)
+            this._olMap.getLayers().array_.forEach(layer => {
+                if (layer.get('name') && layer.get('name') == 'location') {
+                    layer.setSource(source)
                 }
-            }
+            });
         })
 
         this._olMap.render()
@@ -288,7 +266,6 @@ class LocationWidget extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         const stateAttr = this.getAttribute("data-state")
         const countyAttr = this.getAttribute("data-county")
-        const stationAttr = this.getAttribute("data-station")
 
         if (name === "data-state" && oldValue !== newValue) {
             const countySelect = this.shadowRoot.querySelector(`#county-select`)
@@ -333,10 +310,7 @@ class LocationWidget extends HTMLElement {
                 })
             } else {
                 countySelect.disabled = true
-                const stationSelect = this.shadowRoot.querySelector(`#station-select`)
-                stationSelect.disabled = true
                 this.setAttribute("data-county", "")
-                this.setAttribute("data-station", "")
                 this.setAttribute("data-state", "")
                 this._olMap.getLayers().array_.forEach(layer => {
                     if (layer.get('name') && layer.get('name') == 'state-outline') {
@@ -368,79 +342,14 @@ class LocationWidget extends HTMLElement {
                                 duration: 1000
                             })
                         })
-                    fetch(`https://api.weather.gov/stations/?state=${stateAttr}`)
-                        .then(res => res.json())
-                        .then(res => {
-
-                            const countyStations = res.features.filter(f => f.properties.county === thisCounty.url)
-                            const observationStations = countyStations.filter(c => res.observationStations.includes(c.id))
-                            set("stations", observationStations)
-                            //Observation stations are what we need to populate a dashboard
-                            const didSelect = false
-                            const stationSelect = this.shadowRoot.querySelector(`#station-select`)
-                            //Clear old stations
-                            while (stationSelect.firstChild) {
-                                stationSelect.removeChild(stationSelect.lastChild)
-                            }
-                            observationStations.forEach((o, i) => {
-                                const stationOption = document.createElement("option")
-                                stationOption.value = o.properties.name
-                                stationOption.innerText = o.properties.name
-                                if (o[1] === stationAttr) {
-                                    stationSelect.selectedIndex = i
-                                    didSelect = true
-                                }
-                                stationSelect.appendChild(stationOption)
-                                stationSelect.disabled = false
-                            })
-
-                            if (!didSelect && observationStations.length > 0) {
-                                this.setAttribute("data-station", stationSelect.firstChild.value)
-                                stationSelect.selectedIndex = 0
-                            }
-
-                            const fakeJson = { type: "FeatureCollection", features: observationStations }
-
-                            const stationFeatures = new ol.format.GeoJSON().readFeatures(fakeJson, { featureProjection: 'EPSG:3857' })
-                            const stationFeaturesCollection = new ol.Collection(stationFeatures)
-                            const source = new ol.source.Vector({ features: stationFeaturesCollection })
-
-                            this._olMap.getLayers().array_.forEach(layer => {
-                                if (layer.get('name') && layer.get('name') == 'stations') {
-                                    layer.setSource(source)
-                                }
-                            });
-                        })
                 })
             } else {
                 this._olMap.getLayers().array_.forEach(layer => {
-                    if (layer.get('name') && (layer.get('name') == 'stations') || layer.get('name') == 'county-outline') {
+                    if (layer.get('name') && layer.get('name') == 'county-outline') {
                         layer.setSource(null)
                     }
                 });
             }
-        }
-
-        if (name === "data-station" && oldValue !== newValue) {
-            get("stations").then(res => {
-                document.dispatchEvent(new CustomEvent("stationChange", {detail: res.find(r => newValue === r.properties.name)}))
-            })
-            //Updates style function in the layer, so it looks for the new selected value
-            this._olMap.getLayers().array_.forEach(layer => {
-                if (layer.get('name') && layer.get('name') == 'stations') {
-                    layer.changed()
-                }
-            });
-            this.shadowRoot.querySelector("#station-label").innerText = newValue
-            const stationSelect = this.shadowRoot.querySelector(`#station-select`)
-            const selectables = stationSelect.childNodes
-            let selectIndex = 0
-            selectables.forEach((c, i) => {
-                if (c.value === newValue) {
-                    selectIndex = i
-                }
-            })
-            stationSelect.selectedIndex = selectIndex
         }
     }
 }
