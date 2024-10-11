@@ -147,22 +147,6 @@ class LocationWidget extends HTMLElement {
 
         this._olMap.addLayer(locationVector)
 
-        this._olMap.on("pointermove", (e) => {
-
-            // const pixel = this._olMap.getEventPixel(e.originalEvent);
-            // const feature = this.shadowRoot.querySelector("#location-map").closest('.ol-control')
-            //     ? undefined
-            //     : this._olMap.forEachFeatureAtPixel(pixel, function (feature) {
-            //         return feature;
-            //     });
-
-            // if (feature && feature.get("@type")) {
-            //     const featureName = feature.get("name")
-            //     if (featureName) {
-            //         this.shadowRoot.querySelector("#map-info-bar").innerText = featureName
-            //     }
-            // }
-        })
 
         this._olMap.on("click", (e) => {
             const marker = new ol.Feature(new ol.geom.Point(e.coordinate));
@@ -173,6 +157,8 @@ class LocationWidget extends HTMLElement {
                     layer.setSource(source)
                 }
             });
+
+            document.dispatchEvent(new CustomEvent("locationChange", {detail: new ol.proj.toLonLat(e.coordinate)}))
         })
 
         this._olMap.render()
