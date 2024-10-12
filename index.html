@@ -12,8 +12,10 @@
     <script type="module" src="./components/widgets/map.js"></script>
     <script type="module" src="./components/widgets/locationWidget.js"></script>
     <script type="module" src="./components/widgets/dashboard.js"></script>
+    <script type="module" src="./components/widgets/hourlyChart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
         import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
         //Prepare USA state and county data
@@ -41,19 +43,20 @@
             console.log("geolocation")
             navigator.geolocation.getCurrentPosition((position) => {
                 const location = { lat: position.coords.latitude, long: position.coords.longitude }
-                localStorage.setItem("location", JSON.stringify(location))
-                console.log(location)
+                document.dispatchEvent(new CustomEvent("locationChange", { detail: [position.coords.longitude, position.coords.latitude] }))
             })
         } else {
             /* geolocation IS NOT available */
             console.log("no Geo!")
         }
     </script>
+
+
 </head>
 
 <style>
     body {
-        margin: 0;
+        margin: 5px;
         padding: 0;
     }
 
@@ -72,13 +75,27 @@
     </weather-header>
     <page-content>
         <weather-dashboard id="weather-dashboard" slot="page-slot"></weather-dashboard>
+        <hourly-chart slot="page-slot"></hourly-chart>
     </page-content>
 
-    <template id="forecast-box">
-        <label></label>
-        <img />
-        <p></p>
-    </template>
+
+
+
+
 </body>
 
+<template id="forecast-box">
+    <div class="forecast-box">
+        <label class="forecast-label"></label>
+        <img class="forecast-rep" />
+        <p class="forecast-temperature"></p>
+        <p class="forecast-description"></p>
+        <dialog id="forecast-dialog">
+            <form method="dialog" class="forecast-dialog">
+                <button type="submit" aria-label="Close detailed forecast" formnovalidate>X</button>
+                <p class="forecast-detailed-description"></p>
+            </form>
+        </dialog>
+    </div>
+</template>
 </html>

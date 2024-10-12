@@ -27,24 +27,7 @@ class PageContent extends HTMLElement {
   }
 
   connectedCallback() {
-    if ("geolocation" in navigator) {
-      /* geolocation is available */
-      console.log("geolocation")
-      navigator.geolocation.getCurrentPosition((position) => {
-        const location = { lat: position.coords.latitude, long: position.coords.longitude }
-        localStorage.setItem("location", JSON.stringify(location))
-        console.log(location)
-        let slottedElements = this.shadowRoot.querySelector("#page-slot").assignedElements()
-        slottedElements.forEach(el => {
-          el.dataset.lat = position.coords.latitude
-          el.dataset.long = position.coords.longitude
-        })
-
-      })
-    } else {
-      /* geolocation IS NOT available */
-      console.log("no Geo!")
-    }
+    
   }
 }
 
