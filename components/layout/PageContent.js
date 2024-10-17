@@ -25,10 +25,6 @@ class PageContent extends HTMLElement {
     shadow.appendChild(pageContainer)
     shadow.appendChild(style)
   }
-
-  connectedCallback() {
-    
-  }
 }
 
 customElements.define("page-content", PageContent);

@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whether the weather will favor the heathers</title>
-    <link rel="stylesheet" href="./static/globalStyles.css" <script type="module"
-        src="./components/layout/PageContent.js">
-    </script>
-    <script type="module" src="./components/layout/Header.js"></script>
+    <link rel="stylesheet" href="./static/globalStyles.css"/>
+    <script type="module" src="./components/layout/pageContent.js"></script>
+    <script type="module" src="./components/layout/header.js"></script>
     <script type="module" src="./components/widgets/map.js"></script>
     <script type="module" src="./components/widgets/locationWidget.js"></script>
-    <script type="module" src="./components/widgets/dashboard.js"></script>
+    <script type="module" src="./components/widgets/weeklyForecast.js"></script>
     <script type="module" src="./components/widgets/hourlyChart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
@@ -37,6 +37,34 @@
                     }
                 }))
             })
+
+        document.addEventListener("locationChange", (e) => {
+            fetch(`https://api.weather.gov/points/${e.detail[1]},${e.detail[0]}`)
+                .then(res => res.json())
+                .then(pointInfo => {
+                    const header = document.querySelector("#forecast-header")
+                    header.setAttribute("data-city", pointInfo.properties.relativeLocation.properties.city)
+                    header.setAttribute("data-state", pointInfo.properties.relativeLocation.properties.state)
+                    const weeklyForecast = document.querySelector("#weekly-forecast")
+                    weeklyForecast.setAttribute("data-forecast-url", pointInfo.properties.forecast)
+                    const hourlyChart = document.querySelector("#hourly-chart")
+                    hourlyChart.setAttribute("data-forecast-url", pointInfo.properties.forecastHourly)
+                    const pageContent = document.querySelector("#page-content")
+                    pageContent.childNodes.forEach(n => {
+                        if (n.nodeName !== "#text") {
+                            n.setAttribute("data-gridX", pointInfo.properties.gridX)
+                            n.setAttribute("data-gridY", pointInfo.properties.gridY)
+                            if (n.id === "current-container") {
+                                n.childNodes.forEach(c => {
+                                    n.setAttribute("data-gridX", pointInfo.properties.gridX)
+                                    n.setAttribute("data-gridY", pointInfo.properties.gridY)
+                                })
+                            }
+                        }
+                    }
+                    )
+                })
+        })
 
         if ("geolocation" in navigator) {
             /* geolocation is available */
@@ -73,15 +101,17 @@
     <weather-header slot="page-slot">
         <location-widget id="location-widget" slot="location-slot"></location-widget>
     </weather-header>
-    <page-content>
-        <weather-dashboard id="weather-dashboard" slot="page-slot"></weather-dashboard>
-        <hourly-chart slot="page-slot"></hourly-chart>
+    <page-content id="page-content">
+        <forecast-header id="forecast-header"></forecast-header>
+        <alert-bar id="alert-bar"></alert-bar>
+        <div id="current-container" slot="page-slot">
+            <current-weather id="current-weather"></current-weather>
+            <current-radar id="current-radar"></current-radar>
+        </div>
+        <weekly-forecast id="weekly-forecast" slot="page-slot"></weekly-forecast>
+        <hourly-chart id="hourly-chart" slot="page-slot"></hourly-chart>
+        <weather-details id="weather-details" slot="page-slot"></weather-details>
     </page-content>
-
-
-
-
-
 </body>
 
 <template id="forecast-box">
@@ -98,4 +128,5 @@
         </dialog>
     </div>
 </template>
+
 </html>
