@@ -37,7 +37,7 @@ class WeeklyForecast extends HTMLElement {
         #daily-forecast {
             display: flex;
             overflow: auto;
-            height: 230px;
+            height: 320px;
             width: 100%;
         }
 
@@ -46,8 +46,8 @@ class WeeklyForecast extends HTMLElement {
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 200px;
-            min-height: 200px;
+            height: 280px;
+            min-height: 280px;
             width: 200px;
             min-width: 200px;
             border: 1px solid magenta;
@@ -75,9 +75,18 @@ class WeeklyForecast extends HTMLElement {
             background-color: rgba(20,20,240,0.5)
         }
 
-        .forecast-dialog {
-            display: flex;
-            flex-direction: column
+        .forecast-box[data-active="true"] {
+            background-color: rgba(255, 0, 255, 1)
+            width: 320px;
+            min-width: 320px;
+        }
+
+
+        .forecast-detailed-description {
+            max-height: 100px;
+            height: 100px;
+            overflow: auto;
+            padding-right: 10px;
         }
         `
         shadow.appendChild(style)
@@ -97,7 +106,7 @@ class WeeklyForecast extends HTMLElement {
                     while (dailyForecast.lastChild) {
                         dailyForecast.removeChild(dailyForecast.firstChild)
                     }
-                    forecast.properties.periods.forEach(p => {
+                    forecast.properties.periods.forEach((p, i) => {
                         const newForecast = forecastTemplate.content.cloneNode(true)
                         newForecast.querySelector("label").innerText = p.name
                         newForecast.querySelector("img").src = p.icon
@@ -105,19 +114,27 @@ class WeeklyForecast extends HTMLElement {
                         newForecast.querySelector(".forecast-description").innerText = p.shortForecast
                         newForecast.querySelector(".forecast-detailed-description").innerText = p.detailedForecast
                         const forecastBox = newForecast.querySelector(".forecast-box")
+                        if (i === 0 && !forecastBox.getAttribute("data-active")) {
+                            forecastBox.setAttribute("data-active", "true")
+                            document.dispatchEvent(new CustomEvent("forecastChange", {detail: [p.startTime, p.name]}))
+                        }
                         forecastBox.addEventListener("click", () => {
-                            if (forecastBox.getAttribute("data-clicked") == "true") {
-                                this.shadowRoot.querySelector("#forecast-dialog").showModal()
-                                forecastBox.setAttribute("data-clicked", false)
-                            } else {
-                                forecastBox.setAttribute("data-clicked", true)
-                            }
-                            setTimeout(() => {
-                                forecastBox.setAttribute("data-clicked", false)
-                            }, 2000)
+                            forecastBox.scrollIntoView({inline: "center"})
+                            const siblings = dailyForecast.childNodes
+                            siblings.forEach(s => {
+                                if (s.nodeName !== "#text") {
+                                    if (s === forecastBox) {
+                                        s.setAttribute("data-active", "true")
+                                    } else {
+                                        s.setAttribute("data-active", "false")
+                                    }
+                                }
+                            })
+                            document.dispatchEvent(new CustomEvent("forecastChange", {detail: [p.startTime, p.name]}))
                         })
                         dailyForecast.appendChild(newForecast)
                     })
+                    
                 })
         }
     }

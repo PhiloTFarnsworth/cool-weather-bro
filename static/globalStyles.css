@@ -1,3 +1,40 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+page-content {
+    display: flex;
+    flex-direction: column;
+    width: 100dvw;
+    height: calc(100dvh - 50px);
+    overflow: hidden;
+}
+
+weather-header {
+    width: 100%;
+    height: 50px;
+    background-color: #5555FF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.header-container {
+    width: 100%;
+    background-color: #5555FF;
+  }
+
+  h1 {
+    color: white;
+    padding: 5px;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+  }
+
 .tooltip-contents {
     background-color: rgba(250, 250, 250, 0.9);
     border-radius: 10px;
@@ -29,3 +66,4 @@
 h1, h2, h3, h4, h5, h6 {
     margin: 5px 0px;
 }
+

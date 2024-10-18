@@ -30,7 +30,7 @@ const colorPalette = [
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class HourlyChart extends HTMLElement {
-    static observedAttributes = ["data-forecast-url"]
+    static observedAttributes = ["data-forecast-url", "data-forecast-start", "data-forecast-label"]
 
     constructor() {
         super();
@@ -45,7 +45,10 @@ class HourlyChart extends HTMLElement {
         }
 
         const chartLabel = document.createElement("h3")
-        chartLabel.innerText = "7-day Hourly Summary"
+        chartLabel.innerText = "24 Hour Summary - "
+        const chartSpan = document.createElement("span")
+        chartSpan.innerText = "loading..."
+        chartLabel.appendChild(chartSpan)
 
         const chartOverflow = document.createElement("div")
         chartOverflow.id = "chart-overflow"
@@ -64,18 +67,24 @@ class HourlyChart extends HTMLElement {
 
         style.innerText = `
         #chart-overflow {
-            height: 300px;
+            height: 320px;
             width: 100%;
-            overflow: auto
+            overflow: auto;
+            margin: auto;
         }
         #chart-container {
             margin: 10px;
             height: 280px;
-            width: 10000px;
+            width: 2000px;
             }
 
         `
         shadow.appendChild(style)
+
+        document.addEventListener("forecastChange", (e) => {
+            this.setAttribute("data-forecast-label", e.detail[1])
+            this.setAttribute("data-forecast-start", e.detail[0])
+        })
 
     }
 
@@ -84,10 +93,31 @@ class HourlyChart extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === "data-forecast-url" && newValue) {
-            fetch(newValue)
+        if ((name === "data-forecast-url" || name === "data-forecast-start" || name === "data-forecast-label") && newValue) {
+            const forecastUrl = this.getAttribute("data-forecast-url")
+            const forecastStart = this.getAttribute("data-forecast-start") ? this.getAttribute("data-forecast-start") : 0
+            this.shadowRoot.querySelector("h3").querySelector("span").innerText = this.getAttribute("data-forecast-label")
+            fetch(forecastUrl)
                 .then(res => res.json())
                 .then(res => {
+
+                    //Get index of selected time.
+                    let forecastSlice
+                    console.log(forecastStart)
+                    if (forecastStart) {
+                        let index = res.properties.periods.findIndex(p => p.startTime === forecastStart)
+                        if (index + 24 < res.properties.periods.length) {
+                            forecastSlice = index
+                        } else {
+                            forecastSlice =  res.properties.periods.length - 25
+                        }
+                    } else {
+                        forecastSlice = 0
+                    }
+
+                    const slicedData = res.properties.periods.slice(forecastSlice, forecastSlice + 24)
+
+
                     const ctx = this.shadowRoot.getElementById('chart-canvas');
                     if (Chart.getChart(ctx)) {
                         Chart.getChart(ctx).destroy()
@@ -97,7 +127,7 @@ class HourlyChart extends HTMLElement {
                             datasets: [{
                                 label: "Temperature",
                                 type: "bar",
-                                data: res.properties.periods.map(p => {
+                                data: slicedData.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
                                         y: p.temperature,
@@ -126,7 +156,7 @@ class HourlyChart extends HTMLElement {
                             {
                                 label: "Relative Humidity",
                                 type: "line",
-                                data: res.properties.periods.map(p => {
+                                data: slicedData.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
                                         y: p.relativeHumidity.value ? p.relativeHumidity.value : 0,
@@ -144,7 +174,7 @@ class HourlyChart extends HTMLElement {
                             {
                                 label: "Dewpoint",
                                 type: "line",
-                                data: res.properties.periods.map(p => {
+                                data: slicedData.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
                                         y: p?.dewpoint?.value ? p.dewpoint.value.toFixed(0) : 0,
@@ -309,7 +339,7 @@ class HourlyChart extends HTMLElement {
                                     position: "bottom",
                                     axis: "x",
                                     type: "category",
-                                    labels: res.properties.periods.map(p => (p.temperature) + "° F"),
+                                    labels: slicedData.map(p => (p.temperature) + "° F"),
                                     grid: {
                                         display: false,
 
@@ -336,7 +366,7 @@ class HourlyChart extends HTMLElement {
                                     grid: {
                                         display: false
                                     },
-                                    labels: res.properties.periods.map(p => {
+                                    labels: slicedData.map(p => {
                                         const periodStart = new Date(p.startTime)
                                         return new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                     }),
@@ -356,7 +386,7 @@ class HourlyChart extends HTMLElement {
                                     grid: {
                                         display: false
                                     },
-                                    labels: res.properties.periods.map(p => {
+                                    labels: slicedData.map(p => {
                                         const periodStart = new Date(p.startTime)
                                         return (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
                                             + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM")
@@ -375,7 +405,7 @@ class HourlyChart extends HTMLElement {
                                     position: "top",
                                     axis: "x",
                                     type: "category",
-                                    labels: res.properties.periods.map(p => (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%"),
+                                    labels: slicedData.map(p => (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%"),
                                     grid: {
                                         display: false,
 
@@ -392,7 +422,7 @@ class HourlyChart extends HTMLElement {
                                     position: "top",
                                     axis: "x",
                                     type: "category",
-                                    labels: res.properties.periods.map(p => p.windDirection),
+                                    labels: slicedData.map(p => p.windDirection),
                                     grid: {
                                         display: false,
                                     },
@@ -409,7 +439,7 @@ class HourlyChart extends HTMLElement {
                                     position: "top",
                                     axis: "x",
                                     type: "category",
-                                    labels: res.properties.periods.map(p => p.windSpeed),
+                                    labels: slicedData.map(p => p.windSpeed),
                                     grid: {
                                         display: false,
                                     },

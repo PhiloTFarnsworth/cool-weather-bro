@@ -19,23 +19,6 @@ class Header extends HTMLElement {
         header.innerText = "UR WEATHER"
         headerContainer.appendChild(header)
 
-        const style = document.createElement('style')
-        style.innerText = `
-          .header-container {
-            width: 100%;
-            background-color: #5555FF;
-          }
-
-          h1 {
-            color: white;
-            padding: 5px;
-            text-align: center;
-            width: 100%;
-            height: 100%;
-          }
-        `
-
-        shadow.appendChild(style)
         shadow.appendChild(headerContainer)
     }
 }

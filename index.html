@@ -82,32 +82,6 @@
 
 </head>
 
-<style>
-    body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    page-content {
-        display: flex;
-        flex-direction: column;
-        width: 100dvw;
-        height: calc(100dvh - 100px);
-        overflow: hidden;
-    }
-
-    weather-header {
-        width: 100%;
-        height: 100px;
-        background-color: #5555FF;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
-
 <body>
     <weather-header></weather-header>
     <page-content id="page-content">
@@ -130,12 +104,7 @@
         <img class="forecast-rep" />
         <p class="forecast-temperature"></p>
         <p class="forecast-description"></p>
-        <dialog id="forecast-dialog">
-            <form method="dialog" class="forecast-dialog">
-                <button type="submit" aria-label="Close detailed forecast" formnovalidate>X</button>
-                <p class="forecast-detailed-description"></p>
-            </form>
-        </dialog>
+        <p class="forecast-detailed-description"></p>
     </div>
 </template>
 
