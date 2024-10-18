@@ -1,6 +1,4 @@
 import 'https://cdn.jsdelivr.net/npm/chart.js';
-import 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0';
-
 
 const colorPalette = [
     { "temperature": -50, "color": "rgba(0, 0, 139, .8)" },    // Dark Blue
@@ -28,6 +26,7 @@ const colorPalette = [
     { "temperature": 120, "color": "rgba(139, 0, 0, .8)" },    // Darker Red
     { "temperature": 130, "color": "rgba(139, 0, 51, .8)" }    // Dark Redish/Purple
 ]
+
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class HourlyChart extends HTMLElement {
@@ -36,6 +35,17 @@ class HourlyChart extends HTMLElement {
     constructor() {
         super();
         const shadow = this.attachShadow({ mode: "open" });
+        //Copy Global Styles into the shadow Dom, so we're not re-writing everything
+        const globalStylesIndex = Array.from(document.styleSheets).findIndex(s => s.href.includes("static/globalStyles.css"))
+        console.log(globalStylesIndex)
+        if (globalStylesIndex !== undefined) {
+            const globalStylesCopy = new CSSStyleSheet()
+            Array.from(document.styleSheets.item(globalStylesIndex).cssRules).forEach(c => globalStylesCopy.insertRule(c.cssText))
+            shadow.adoptedStyleSheets = [globalStylesCopy];
+        }
+
+        const chartLabel = document.createElement("h3")
+        chartLabel.innerText = "7-day Hourly Summary"
 
         const chartOverflow = document.createElement("div")
         chartOverflow.id = "chart-overflow"
@@ -47,6 +57,7 @@ class HourlyChart extends HTMLElement {
         chartCanvas.id = "chart-canvas"
         chartOverflow.appendChild(chartContainer)
         chartContainer.appendChild(chartCanvas)
+        shadow.appendChild(chartLabel)
         shadow.appendChild(chartOverflow)
 
         const style = document.createElement("style")
@@ -81,8 +92,7 @@ class HourlyChart extends HTMLElement {
                     if (Chart.getChart(ctx)) {
                         Chart.getChart(ctx).destroy()
                     }
-                    const weeklyChart = new Chart(ctx, {
-                        plugins: [ChartDataLabels],
+                    new Chart(ctx, {
                         data: {
                             datasets: [{
                                 label: "Temperature",
@@ -97,6 +107,7 @@ class HourlyChart extends HTMLElement {
                                         xSpeed: p.windSpeed,
                                         xDirection: p.windDirection,
                                         xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
+                                        xTemp: p.temperature,
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
                                             + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
@@ -118,12 +129,6 @@ class HourlyChart extends HTMLElement {
                                 data: res.properties.periods.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
-                                        xHour: (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
-                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
-                                        xDay: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart),
-                                        xSpeed: p.windSpeed,
-                                        xDirection: p.windDirection,
-                                        xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
                                         y: p.relativeHumidity.value ? p.relativeHumidity.value : 0,
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
@@ -142,12 +147,6 @@ class HourlyChart extends HTMLElement {
                                 data: res.properties.periods.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
-                                        xHour: (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
-                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
-                                        xDay: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart),
-                                        xSpeed: p.windSpeed,
-                                        xDirection: p.windDirection,
-                                        xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
                                         y: p?.dewpoint?.value ? p.dewpoint.value.toFixed(0) : 0,
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
@@ -163,44 +162,172 @@ class HourlyChart extends HTMLElement {
                             ],
                         },
                         options: {
+                            interaction: {
+                                mode: 'index',
+                                axis: 'x'
+                            },
                             plugins: {
                                 legend: {
                                     display: true,
                                     position: "top",
                                     align: "start"
                                 },
-                                // Change options for ALL labels of THIS CHART
-                                datalabels: {
-                                    color: '#0A0A0A',
-                                    formatter: function (value, context) {
-                                        console.log(context)
-                                        if (context.dataset.label === "Dewpoint") return value.y + "°"
-                                        if (context.dataset.type === "line") return value.y + '%';
-                                        return value.y + "° F"
-                                    },
-                                    anchor: "end",
-                                    align: function (context) {
-                                        if (context.dataset.type === "line") return "bottom"
-                                        return "top"
-                                    },
-                                    display: function (context) {
-                                        if (context.dataset.type === "line") return "auto"
-                                        return true
-                                    },
-                                    font: {
-                                        weight: "bold"
-                                    },
-                                    offset: 6
+                                tooltip: {
+                                    // Disable the on-canvas tooltip
+                                    enabled: false,
+
+                                    external: function (context) {
+                                        // Tooltip Element
+                                        let tooltipEl = document.getElementById('chartjs-tooltip');
+
+                                        // Create element on first render
+                                        if (!tooltipEl) {
+                                            tooltipEl = document.createElement('div');
+                                            tooltipEl.id = 'chartjs-tooltip';
+                                            document.body.appendChild(tooltipEl);
+                                        }
+
+                                        // Hide if no tooltip
+                                        const tooltipModel = context.tooltip;
+                                        if (tooltipModel.opacity === 0) {
+                                            tooltipEl.style.opacity = 0;
+                                            return;
+                                        }
+
+                                        // Set caret Position
+                                        tooltipEl.classList.remove('above', 'below', 'no-transform');
+                                        if (tooltipModel.yAlign) {
+                                            tooltipEl.classList.add(tooltipModel.yAlign);
+                                        } else {
+                                            tooltipEl.classList.add('no-transform');
+                                        }
+
+                                        function getBody(bodyItem) {
+                                            return bodyItem.lines;
+                                        }
+
+                                        // Set Text
+                                        if (tooltipModel.body) {
+
+                                            while (tooltipEl.firstChild) {
+                                                tooltipEl.removeChild(tooltipEl.lastChild)
+                                            }
+
+                                            const dataIndex = tooltipModel.dataPoints[0].dataIndex
+                                            const tempData = tooltipModel.dataPoints.find(d => d.dataset.label === "Temperature")?.dataset?.data?.[dataIndex]
+                                            const humidityData = tooltipModel.dataPoints.find(d => d.dataset.label === "Relative Humidity")?.dataset?.data?.[dataIndex]
+                                            const dewpointData = tooltipModel.dataPoints.find(d => d.dataset.label === "Dewpoint")?.dataset?.data?.[dataIndex]
+                                            const tooltipContents = document.createElement("div")
+                                            tooltipContents.className = "tooltip-contents"
+                                            const tooltipLabelColors = tooltipModel.labelColors[0]
+                                            tooltipContents.setAttribute("style",
+                                                `border: 2px solid ${tooltipLabelColors.backgroundColor};`)
+                                            if (tempData) {
+                                                const tooltipLabel = document.createElement("label")
+                                                tooltipLabel.innerText = `${tempData.x}`
+                                                tooltipContents.appendChild(tooltipLabel)
+
+                                                const tooltipWindLabel = document.createElement("label")
+                                                tooltipWindLabel.innerText = `Wind`
+                                                const tooltipWind = document.createElement("p")
+                                                tooltipWind.innerText = `${tempData.xSpeed} ${tempData.xDirection}`
+                                                tooltipContents.appendChild(tooltipWindLabel)
+                                                tooltipContents.appendChild(tooltipWind)
+
+                                                const tooltipTemperatureLabel = document.createElement("label")
+                                                tooltipTemperatureLabel.innerText = "Temp"
+                                                const tooltipTemperature = document.createElement("p")
+                                                tooltipTemperature.innerText = `${tempData.xTemp}° F`
+                                                tooltipContents.appendChild(tooltipTemperatureLabel)
+                                                tooltipContents.appendChild(tooltipTemperature)
+
+
+                                                const tooltipPrecipLabel = document.createElement("label")
+                                                tooltipPrecipLabel.innerText = "Chance of Precipitation"
+                                                const tooltipPrecip = document.createElement("p")
+                                                tooltipPrecip.innerText = `${tempData.xPrecip}`
+                                                tooltipContents.appendChild(tooltipPrecipLabel)
+                                                tooltipContents.appendChild(tooltipPrecip)
+                                            }
+
+                                            if (humidityData) {
+                                                if (!tempData) {
+                                                    const tooltipLabel = document.createElement("label")
+                                                    tooltipLabel.innerText = `${humidityData.x}`
+                                                    tooltipContents.appendChild(tooltipLabel)
+                                                }
+
+                                                const tooltipHumidityLabel = document.createElement("label")
+                                                tooltipHumidityLabel.innerText = `Relative Humidity`
+                                                const tooltipHumidity = document.createElement("p")
+                                                tooltipHumidity.innerText = `${humidityData.y}%`
+                                                tooltipContents.appendChild(tooltipHumidityLabel)
+                                                tooltipContents.appendChild(tooltipHumidity)
+                                            }
+
+                                            if (dewpointData) {
+                                                if (!tempData && !humidityData) {
+                                                    const tooltipLabel = document.createElement("label")
+                                                    tooltipLabel.innerText = `${dewpointData.x}`
+                                                    tooltipContents.appendChild(tooltipLabel)
+                                                }
+
+                                                const tooltipDewpointLabel = document.createElement("label")
+                                                tooltipDewpointLabel.innerText = "Dewpoint"
+                                                const tooltipDewpoint = document.createElement("p")
+                                                tooltipDewpoint.innerText = `${dewpointData.y} °`
+                                                tooltipContents.appendChild(tooltipDewpointLabel)
+                                                tooltipContents.appendChild(tooltipDewpoint)
+                                            }
+                                            tooltipEl.appendChild(tooltipContents)
+
+                                        }
+
+                                        const position = context.chart.canvas.getBoundingClientRect();
+                                        const bodyFont = Chart.helpers.toFont(tooltipModel.options.bodyFont);
+
+                                        // Display, position, and set styles for font
+                                        tooltipEl.style.opacity = 1;
+                                        tooltipEl.style.position = 'absolute';
+                                        tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 20 + 'px';
+                                        tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 80 + 'px';
+                                        tooltipEl.style.font = bodyFont.string;
+                                        tooltipEl.style.padding = tooltipModel.padding + 'px ' + tooltipModel.padding + 'px';
+                                        tooltipEl.style.pointerEvents = 'none';
+                                    }
                                 }
                             },
                             maintainAspectRatio: false,
                             scales: {
                                 y: {
-                                    display: false,
-                                    max: 150
+                                    display: false
                                 },
                                 x: {
                                     display: false,
+                                },
+                                xTemp: {
+                                    position: "bottom",
+                                    axis: "x",
+                                    type: "category",
+                                    labels: res.properties.periods.map(p => (p.temperature) + "° F"),
+                                    grid: {
+                                        display: false,
+
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        padding: 0,
+                                        font: {
+                                            weight: "bolder"
+                                        },
+                                        backdropPadding: {
+                                            x: 5,
+                                            y: 2
+                                        }
+                                    },
+                                    offset: true
                                 },
                                 xDay: {
                                     position: "bottom",
@@ -217,8 +344,9 @@ class HourlyChart extends HTMLElement {
                                         display: false
                                     },
                                     ticks: {
-                                        padding: 0
-                                    },      
+                                        padding: 0,
+                                        backdropPadding: 0
+                                    },
                                     offset: true
                                 },
                                 xHour: {
@@ -237,9 +365,11 @@ class HourlyChart extends HTMLElement {
                                         display: false
                                     },
                                     ticks: {
-                                        padding: 0
-                                    },      
-                                    offset: true
+                                        padding: 0,
+                                        backdropPadding: 0
+                                    },
+                                    offset: true,
+                                    padding: 0
                                 },
                                 xPrecip: {
                                     position: "top",
@@ -249,6 +379,9 @@ class HourlyChart extends HTMLElement {
                                     grid: {
                                         display: false,
 
+                                    },
+                                    ticks: {
+                                        padding: 0,
                                     },
                                     border: {
                                         display: false
@@ -263,9 +396,12 @@ class HourlyChart extends HTMLElement {
                                     grid: {
                                         display: false,
                                     },
+                                    border: {
+                                        display: false
+                                    },
                                     ticks: {
                                         padding: 0
-                                    },                                    
+                                    },
                                     offset: true
                                 },
                                 xSpeed: {
@@ -282,14 +418,13 @@ class HourlyChart extends HTMLElement {
                                     },
                                     ticks: {
                                         padding: 0
-                                    },      
+                                    },
                                     offset: true
                                 }
                             }
 
                         }
                     })
-                    console.log(weeklyChart)
                 })
         }
     }

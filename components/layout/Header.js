@@ -1,11 +1,15 @@
 class Header extends HTMLElement {
     constructor() {
         super();
-    }
-
-    connectedCallback() {
+        
         const shadow = this.attachShadow({ mode: "closed" });
-
+        //Copy Global Styles into the shadow Dom, so we're not re-writing everything
+        const globalStylesIndex = Array.from(document.styleSheets).findIndex(s => s.href.includes("static/globalStyles.css"))
+        if (globalStylesIndex !== undefined) {
+            const globalStylesCopy = new CSSStyleSheet()
+            Array.from(document.styleSheets.item(globalStylesIndex).cssRules).forEach(c => globalStylesCopy.insertRule(c.cssText))
+            shadow.adoptedStyleSheets = [globalStylesCopy];
+        }
 
         //Simple Div
         const headerContainer = document.createElement('div')
@@ -25,7 +29,6 @@ class Header extends HTMLElement {
           h1 {
             color: white;
             padding: 5px;
-            margin: 0;
             text-align: center;
             width: 100%;
             height: 100%;

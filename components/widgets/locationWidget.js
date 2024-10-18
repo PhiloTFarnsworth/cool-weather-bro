@@ -11,8 +11,15 @@ class LocationWidget extends HTMLElement {
         const countyAttr = this.getAttribute("data-county")
         const stationAttr = this.getAttribute("data-station")
 
-
         const shadow = this.attachShadow({ mode: "open" })
+
+        //Copy Global Styles into the shadow Dom, so we're not re-writing everything
+        const globalStylesIndex = Array.from(document.styleSheets).findIndex(s => s.href.includes("static/globalStyles.css"))
+        if (globalStylesIndex !== undefined) {
+            const globalStylesCopy = new CSSStyleSheet()
+            Array.from(document.styleSheets.item(globalStylesIndex).cssRules).forEach(c => globalStylesCopy.insertRule(c.cssText))
+            shadow.adoptedStyleSheets = [globalStylesCopy];
+        }
 
         const locationWidgetContainer = document.createElement("div")
         locationWidgetContainer.className = "location-widget-container"

@@ -1,0 +1,31 @@
+.tooltip-contents {
+    background-color: rgba(250, 250, 250, 0.9);
+    border-radius: 10px;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #0A0A0A;
+}
+
+.tooltip-contents p {
+    margin: 5px;
+}
+
+.tooltip-contents label {
+    font-weight: bold;
+    max-width: 100px;
+    text-align: center;
+}
+
+.tooltip-contents label:first-child {
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-bottom: 1px solid black;
+    margin-bottom: 2px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 5px 0px;
+}

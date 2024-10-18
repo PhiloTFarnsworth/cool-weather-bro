@@ -3,6 +3,7 @@ class PageContent extends HTMLElement {
     super();
 
     const shadow = this.attachShadow({ mode: "open" });
+    
     //Simple Div
     const pageContainer = document.createElement('div')
     pageContainer.className = "page-container"
