@@ -18,11 +18,6 @@ class LocationWidget extends HTMLElement {
         locationWidgetContainer.className = "location-widget-container"
         shadow.appendChild(locationWidgetContainer)
 
-        const stationLabel = document.createElement("label")
-        stationLabel.id = "station-label"
-        stationLabel.innerText = `Station: ${stationAttr ? stationAttr : "???"}`
-        locationWidgetContainer.appendChild(stationLabel)
-
         const dialog = document.createElement("dialog")
         locationWidgetContainer.appendChild(dialog)
 

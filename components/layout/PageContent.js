@@ -16,9 +16,12 @@ class PageContent extends HTMLElement {
     const style = document.createElement('style')
     style.innerText = `
         .page-container {
-          height: 100dvh;
-          width: 100dvw;
-          overflow: hidden;
+          width: calc(100% - 40px);
+          height: calc(100% - 40px);
+          overflow: auto;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
         }
       `
     pageContainer.appendChild(contentSlot)

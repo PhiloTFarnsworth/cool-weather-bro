@@ -5,17 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whether the weather will favor the heathers</title>
-    <link rel="stylesheet" href="./static/globalStyles.css"/>
+    <link rel="stylesheet" href="./static/globalStyles.css" />
     <script type="module" src="./components/layout/pageContent.js"></script>
     <script type="module" src="./components/layout/header.js"></script>
-    <script type="module" src="./components/widgets/map.js"></script>
     <script type="module" src="./components/widgets/locationWidget.js"></script>
     <script type="module" src="./components/widgets/weeklyForecast.js"></script>
     <script type="module" src="./components/widgets/hourlyChart.js"></script>
+    <script type="module" src="./components/widgets/forecastHeader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script type="module">
         import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
         //Prepare USA state and county data
@@ -84,25 +85,35 @@
 
 <style>
     body {
-        margin: 5px;
+        margin: 0;
         padding: 0;
+        overflow: hidden;
     }
 
-    #map {
-        width: calc(100% - 10px);
-        height: calc(100% - 200px);
-        position: absolute;
-        top: 100px;
-        border: 5px solid magenta;
+    page-content {
+        display: flex;
+        flex-direction: column;
+        width: 100dvw;
+        height: calc(100dvh - 100px);
+        overflow: hidden;
+    }
+
+    weather-header {
+        width: 100%;
+        height: 100px;
+        background-color: #5555FF;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 </style>
 
 <body>
-    <weather-header slot="page-slot">
-        <location-widget id="location-widget" slot="location-slot"></location-widget>
-    </weather-header>
+    <weather-header></weather-header>
     <page-content id="page-content">
-        <forecast-header id="forecast-header"></forecast-header>
+        <forecast-header id="forecast-header" slot="page-slot"></forecast-header>
+        <location-widget id="location-widget" slot="page-slot"></location-widget>
         <alert-bar id="alert-bar"></alert-bar>
         <div id="current-container" slot="page-slot">
             <current-weather id="current-weather"></current-weather>

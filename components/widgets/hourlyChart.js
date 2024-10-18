@@ -1,4 +1,5 @@
 import 'https://cdn.jsdelivr.net/npm/chart.js';
+import 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0';
 
 
 const colorPalette = [
@@ -52,13 +53,13 @@ class HourlyChart extends HTMLElement {
 
         style.innerText = `
         #chart-overflow {
-            height: 250px;
+            height: 300px;
             width: 100%;
             overflow: auto
         }
         #chart-container {
             margin: 10px;
-            height: 230px;
+            height: 280px;
             width: 10000px;
             }
 
@@ -76,24 +77,30 @@ class HourlyChart extends HTMLElement {
             fetch(newValue)
                 .then(res => res.json())
                 .then(res => {
-
-                    console.log(res)
                     const ctx = this.shadowRoot.getElementById('chart-canvas');
-                    var gradient = ctx.getContext("2d").createLinearGradient(0, 0, 0, 400);
-                    gradient.addColorStop(0, 'rgba(250,174,50,1)');
-                    gradient.addColorStop(1, 'rgba(250,174,50,0)');
-                    new Chart(ctx, {
-                        type: 'bar',
+                    if (Chart.getChart(ctx)) {
+                        Chart.getChart(ctx).destroy()
+                    }
+                    const weeklyChart = new Chart(ctx, {
+                        plugins: [ChartDataLabels],
                         data: {
                             datasets: [{
+                                label: "Temperature",
+                                type: "bar",
                                 data: res.properties.periods.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
+                                        y: p.temperature,
+                                        xHour: (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
+                                        xDay: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart),
+                                        xSpeed: p.windSpeed,
+                                        xDirection: p.windDirection,
+                                        xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
                                             + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
                                             + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
-                                        y: p.temperature
                                     }
                                 }),
                                 backgroundColor: function (context) {
@@ -103,28 +110,186 @@ class HourlyChart extends HTMLElement {
                                 borderRadius: 2,
                                 categoryPercentage: 1, // Each category takes up 100% of the available space
                                 barPercentage: 1, // Each bar takes up 100% of the category space
-                            }],
+                                order: 4
+                            },
+                            {
+                                label: "Relative Humidity",
+                                type: "line",
+                                data: res.properties.periods.map(p => {
+                                    const periodStart = new Date(p.startTime)
+                                    return {
+                                        xHour: (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
+                                        xDay: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart),
+                                        xSpeed: p.windSpeed,
+                                        xDirection: p.windDirection,
+                                        xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
+                                        y: p.relativeHumidity.value ? p.relativeHumidity.value : 0,
+                                        x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
+                                            + " "
+                                            + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
+                                    }
+                                }),
+                                backgroundColor: "#301B87",
+                                pointRadius: 5,
+                                order: 2,
+                                hidden: true
+                            },
+                            {
+                                label: "Dewpoint",
+                                type: "line",
+                                data: res.properties.periods.map(p => {
+                                    const periodStart = new Date(p.startTime)
+                                    return {
+                                        xHour: (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
+                                        xDay: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart),
+                                        xSpeed: p.windSpeed,
+                                        xDirection: p.windDirection,
+                                        xPrecip: (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%",
+                                        y: p?.dewpoint?.value ? p.dewpoint.value.toFixed(0) : 0,
+                                        x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
+                                            + " "
+                                            + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM"),
+                                    }
+                                }),
+                                backgroundColor: "#A06BC7",
+                                pointRadius: 5,
+                                order: 1,
+                                hidden: true,
+                            },
+                            ],
                         },
                         options: {
                             plugins: {
                                 legend: {
-                                    display: false,
+                                    display: true,
+                                    position: "top",
+                                    align: "start"
+                                },
+                                // Change options for ALL labels of THIS CHART
+                                datalabels: {
+                                    color: '#0A0A0A',
+                                    formatter: function (value, context) {
+                                        console.log(context)
+                                        if (context.dataset.label === "Dewpoint") return value.y + "°"
+                                        if (context.dataset.type === "line") return value.y + '%';
+                                        return value.y + "° F"
+                                    },
+                                    anchor: "end",
+                                    align: function (context) {
+                                        if (context.dataset.type === "line") return "bottom"
+                                        return "top"
+                                    },
+                                    display: function (context) {
+                                        if (context.dataset.type === "line") return "auto"
+                                        return true
+                                    },
+                                    font: {
+                                        weight: "bold"
+                                    },
+                                    offset: 6
                                 }
                             },
                             maintainAspectRatio: false,
                             scales: {
                                 y: {
-                                    display: false
+                                    display: false,
+                                    max: 150
                                 },
                                 x: {
+                                    display: false,
+                                },
+                                xDay: {
+                                    position: "bottom",
+                                    axis: "x",
+                                    type: "category",
                                     grid: {
                                         display: false
-                                    }
+                                    },
+                                    labels: res.properties.periods.map(p => {
+                                        const periodStart = new Date(p.startTime)
+                                        return new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
+                                    }),
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        padding: 0
+                                    },      
+                                    offset: true
+                                },
+                                xHour: {
+                                    position: "bottom",
+                                    axis: "x",
+                                    type: "category",
+                                    grid: {
+                                        display: false
+                                    },
+                                    labels: res.properties.periods.map(p => {
+                                        const periodStart = new Date(p.startTime)
+                                        return (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
+                                            + (periodStart.getHours() / 12 >= 1 ? " PM" : " AM")
+                                    }),
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        padding: 0
+                                    },      
+                                    offset: true
+                                },
+                                xPrecip: {
+                                    position: "top",
+                                    axis: "x",
+                                    type: "category",
+                                    labels: res.properties.periods.map(p => (p.probabilityOfPrecipitation.value ? p.probabilityOfPrecipitation.value : 0) + "%"),
+                                    grid: {
+                                        display: false,
+
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    offset: true
+                                },
+                                xDirection: {
+                                    position: "top",
+                                    axis: "x",
+                                    type: "category",
+                                    labels: res.properties.periods.map(p => p.windDirection),
+                                    grid: {
+                                        display: false,
+                                    },
+                                    ticks: {
+                                        padding: 0
+                                    },                                    
+                                    offset: true
+                                },
+                                xSpeed: {
+                                    alignToPixels: true,
+                                    position: "top",
+                                    axis: "x",
+                                    type: "category",
+                                    labels: res.properties.periods.map(p => p.windSpeed),
+                                    grid: {
+                                        display: false,
+                                    },
+                                    border: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        padding: 0
+                                    },      
+                                    offset: true
                                 }
                             }
 
                         }
                     })
+                    console.log(weeklyChart)
                 })
         }
     }

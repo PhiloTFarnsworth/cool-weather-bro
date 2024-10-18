@@ -1,5 +1,3 @@
-import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
-
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class WeeklyForecast extends HTMLElement {
@@ -14,12 +12,9 @@ class WeeklyForecast extends HTMLElement {
         const forecastHeader = document.createElement("div")
         forecastHeader.className = "forecast-heading"
 
-        const forecastHeading = document.createElement("h2")
+        const forecastHeading = document.createElement("h3")
         forecastHeader.appendChild(forecastHeading)
-
-        const forecastLabel = document.createElement("label")
-        forecastLabel.className = "forecast-heading-label"
-        forecastHeader.appendChild(forecastLabel)
+        forecastHeading.innerText = "Your 7-day Outlook"
 
         //Dashboard (contains whatever free products we find, like daily/hourly forecasts)
         const dashboardContainer = document.createElement('div')
@@ -94,7 +89,6 @@ class WeeklyForecast extends HTMLElement {
                     while (dailyForecast.lastChild) {
                         dailyForecast.removeChild(dailyForecast.firstChild)
                     }
-                    this.shadowRoot.querySelector(".forecast-heading-label").innerText = `Your 7 day outlook!`
                     forecast.properties.periods.forEach(p => {
                         const newForecast = forecastTemplate.content.cloneNode(true)
                         newForecast.querySelector("label").innerText = p.name
