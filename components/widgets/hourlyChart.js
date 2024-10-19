@@ -37,7 +37,6 @@ class HourlyChart extends HTMLElement {
         const shadow = this.attachShadow({ mode: "open" });
         //Copy Global Styles into the shadow Dom, so we're not re-writing everything
         const globalStylesIndex = Array.from(document.styleSheets).findIndex(s => s.href.includes("static/globalStyles.css"))
-        console.log(globalStylesIndex)
         if (globalStylesIndex !== undefined) {
             const globalStylesCopy = new CSSStyleSheet()
             Array.from(document.styleSheets.item(globalStylesIndex).cssRules).forEach(c => globalStylesCopy.insertRule(c.cssText))
@@ -103,13 +102,12 @@ class HourlyChart extends HTMLElement {
 
                     //Get index of selected time.
                     let forecastSlice
-                    console.log(forecastStart)
                     if (forecastStart) {
                         let index = res.properties.periods.findIndex(p => p.startTime === forecastStart)
                         if (index + 24 < res.properties.periods.length) {
                             forecastSlice = index
                         } else {
-                            forecastSlice =  res.properties.periods.length - 25
+                            forecastSlice = res.properties.periods.length - 25
                         }
                     } else {
                         forecastSlice = 0
@@ -177,7 +175,7 @@ class HourlyChart extends HTMLElement {
                                 data: slicedData.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
-                                        y: p?.dewpoint?.value ? p.dewpoint.value.toFixed(0) : 0,
+                                        y: p?.dewpoint?.value ? ((p.dewpoint.value * (9/5)) + 32).toFixed(0) : 0,
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
                                             + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
@@ -305,7 +303,7 @@ class HourlyChart extends HTMLElement {
                                                 const tooltipDewpointLabel = document.createElement("label")
                                                 tooltipDewpointLabel.innerText = "Dewpoint"
                                                 const tooltipDewpoint = document.createElement("p")
-                                                tooltipDewpoint.innerText = `${dewpointData.y} °`
+                                                tooltipDewpoint.innerText = `${dewpointData.y}° F`
                                                 tooltipContents.appendChild(tooltipDewpointLabel)
                                                 tooltipContents.appendChild(tooltipDewpoint)
                                             }
@@ -456,6 +454,7 @@ class HourlyChart extends HTMLElement {
                         }
                     })
                 })
+            this.shadowRoot.querySelector("#chart-overflow").scroll(0,0)
         }
     }
 }

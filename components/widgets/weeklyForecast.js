@@ -76,7 +76,7 @@ class WeeklyForecast extends HTMLElement {
         }
 
         .forecast-box[data-active="true"] {
-            background-color: rgba(255, 0, 255, 1)
+            background-color: rgba(255, 0, 255, 1);
             width: 320px;
             min-width: 320px;
         }

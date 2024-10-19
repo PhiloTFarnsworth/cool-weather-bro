@@ -12,6 +12,7 @@
     <script type="module" src="./components/widgets/weeklyForecast.js"></script>
     <script type="module" src="./components/widgets/hourlyChart.js"></script>
     <script type="module" src="./components/widgets/forecastHeader.js"></script>
+    <script type="module" src="./components/widgets/alertBar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
@@ -39,7 +40,7 @@
             })
 
         document.addEventListener("locationChange", (e) => {
-            fetch(`https://api.weather.gov/points/${e.detail[1]},${e.detail[0]}`)
+            fetch(`https://api.weather.gov/points/${e.detail[1].toFixed(4)},${e.detail[0].toFixed(4)}`)
                 .then(res => res.json())
                 .then(pointInfo => {
                     const header = document.querySelector("#forecast-header")
@@ -70,7 +71,6 @@
             /* geolocation is available */
             console.log("geolocation")
             navigator.geolocation.getCurrentPosition((position) => {
-                const location = { lat: position.coords.latitude, long: position.coords.longitude }
                 document.dispatchEvent(new CustomEvent("locationChange", { detail: [position.coords.longitude, position.coords.latitude] }))
             })
         } else {
@@ -87,11 +87,8 @@
     <page-content id="page-content">
         <forecast-header id="forecast-header" slot="page-slot"></forecast-header>
         <location-widget id="location-widget" slot="page-slot"></location-widget>
-        <alert-bar id="alert-bar"></alert-bar>
-        <div id="current-container" slot="page-slot">
-            <current-weather id="current-weather"></current-weather>
-            <current-radar id="current-radar"></current-radar>
-        </div>
+        <alert-bar id="alert-bar" slot="page-slot"></alert-bar>
+        <current-radar id="current-radar" slot="page-slot"></current-radar>
         <weekly-forecast id="weekly-forecast" slot="page-slot"></weekly-forecast>
         <hourly-chart id="hourly-chart" slot="page-slot"></hourly-chart>
         <weather-details id="weather-details" slot="page-slot"></weather-details>
@@ -105,6 +102,16 @@
         <p class="forecast-temperature"></p>
         <p class="forecast-description"></p>
         <p class="forecast-detailed-description"></p>
+    </div>
+</template>
+
+<template id="alert-box">
+    <div class="alert-box">
+        <label class="alert-event-label"></label>
+        <div class="alert-radar-chart-container">
+            <canvas class="alert-radar-chart"></canvas>
+        </div>
+        <p class="alert-area-description"></p>
     </div>
 </template>
 
