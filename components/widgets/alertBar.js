@@ -36,6 +36,13 @@ class AlertBar extends HTMLElement {
         super();
 
         const shadow = this.attachShadow({ mode: "open" });
+        //Copy Global Styles into the shadow Dom, so we're not re-writing everything
+        const globalStylesIndex = Array.from(document.styleSheets).findIndex(s => s.href.includes("static/globalStyles.css"))
+        if (globalStylesIndex !== undefined) {
+            const globalStylesCopy = new CSSStyleSheet()
+            Array.from(document.styleSheets.item(globalStylesIndex).cssRules).forEach(c => globalStylesCopy.insertRule(c.cssText))
+            shadow.adoptedStyleSheets = [globalStylesCopy];
+        }
 
         const alertContainer = document.createElement("div")
         alertContainer.id = "alert-container"
@@ -44,45 +51,6 @@ class AlertBar extends HTMLElement {
         alertLoading.innerText = "loading..."
         alertContainer.append(alertLoading)
 
-        const style = document.createElement("style")
-        style.innerText = `
-            #alert-container {
-                width: 100%;
-                height: 250px;
-                display: flex;
-                overflow: auto;
-            }
-
-            #alert-container:empty {
-                height: 0px;
-            }
-
-            .alert-box {
-                height: 230px;
-                min-width: 300px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .alert-box label {
-                font-weight: bold;
-            }
-
-            .alert-box .alert-area-description {
-                margin: 0;
-                padding: 5px;
-                height: 60px;
-                overflow: auto;
-                text-align: center;
-            }
-
-            .alert-radar-chart-container {
-                height: 150px;
-                width: 300px;
-            }
-        `
-        shadow.appendChild(style)
         shadow.appendChild(alertContainer)
 
         document.addEventListener("locationChange", (e) => {
@@ -109,15 +77,14 @@ class AlertBar extends HTMLElement {
                         res.features.forEach(f => {
                             //Label it up
                             const newAlert = alertTemplate.content.cloneNode(true)
-
-                            const newAlertEventLabel = newAlert.querySelector("label")
-                            newAlertEventLabel.innerText = f.properties.event
-                            const newAlertAreaDescription = newAlert.querySelector("p")
-                            newAlertAreaDescription.innerText = f.properties.areaDesc
+                            newAlert.querySelector("label").innerText = f.properties.event
+                            newAlert.querySelector(".alert-area-expiration").innerText = new Date(f.properties.expires) < new Date() ? "Expired" : new Date(f.properties.expires).toLocaleString()
+                            newAlert.querySelector(".alert-area-description").innerText = f.properties.areaDesc
+                            
                             const ctx = newAlert.querySelector('.alert-radar-chart');
 
                             alertContainer.appendChild(newAlert)
-                            
+
                             //Build Radar chart to convey severity/urgency/certainty/response
                             if (Chart.getChart(ctx)) {
                                 Chart.getChart(ctx).destroy()
@@ -132,7 +99,11 @@ class AlertBar extends HTMLElement {
                             new Chart(ctx, {
                                 type: "radar",
                                 data: {
-                                    labels: ["Severity", "Certainty", "Urgency", "Response"],
+                                    labels: [
+                                        `Severity: ${f.properties.severity}`, 
+                                        `Certainty: ${f.properties.certainty}`, 
+                                        `Urgency: ${f.properties.urgency}`, 
+                                        `Response: ${f.properties.response}`],
                                     datasets: [
                                         {
                                             data: [
@@ -163,6 +134,9 @@ class AlertBar extends HTMLElement {
                                         legend: {
                                             display: false,
                                         },
+                                        tooltip: {
+                                            enabled: false
+                                        }
                                     }
                                 }
                             })

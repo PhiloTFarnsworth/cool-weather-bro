@@ -13,6 +13,7 @@
     <script type="module" src="./components/widgets/hourlyChart.js"></script>
     <script type="module" src="./components/widgets/forecastHeader.js"></script>
     <script type="module" src="./components/widgets/alertBar.js"></script>
+    <script type="module" src="./components/widgets/currentRadar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
@@ -51,6 +52,8 @@
                     const hourlyChart = document.querySelector("#hourly-chart")
                     hourlyChart.setAttribute("data-forecast-url", pointInfo.properties.forecastHourly)
                     const pageContent = document.querySelector("#page-content")
+                    const currentRadar = document.querySelector("current-radar")
+                    currentRadar.setAttribute("data-radar", pointInfo.properties.radarStation)
                     pageContent.childNodes.forEach(n => {
                         if (n.nodeName !== "#text") {
                             n.setAttribute("data-gridX", pointInfo.properties.gridX)
@@ -87,8 +90,10 @@
     <page-content id="page-content">
         <forecast-header id="forecast-header" slot="page-slot"></forecast-header>
         <location-widget id="location-widget" slot="page-slot"></location-widget>
-        <alert-bar id="alert-bar" slot="page-slot"></alert-bar>
-        <current-radar id="current-radar" slot="page-slot"></current-radar>
+        <div class="alert-radar-combo" slot="page-slot">
+            <alert-bar id="alert-bar"></alert-bar>
+            <current-radar id="current-radar"></current-radar>
+        </div>
         <weekly-forecast id="weekly-forecast" slot="page-slot"></weekly-forecast>
         <hourly-chart id="hourly-chart" slot="page-slot"></hourly-chart>
         <weather-details id="weather-details" slot="page-slot"></weather-details>
@@ -107,11 +112,16 @@
 
 <template id="alert-box">
     <div class="alert-box">
-        <label class="alert-event-label"></label>
-        <div class="alert-radar-chart-container">
-            <canvas class="alert-radar-chart"></canvas>
-        </div>
-        <p class="alert-area-description"></p>
+        <details>
+            <summary>
+                <label class="alert-event-label"></label>
+                <p class="alert-area-expiration"></p>
+            </summary>
+            <div class="alert-radar-chart-container">
+                <canvas class="alert-radar-chart"></canvas>
+            </div>
+            <p class="alert-area-description"></p>
+        </details>
     </div>
 </template>
 

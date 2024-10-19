@@ -44,6 +44,77 @@ h1 {
     background-color: #5555FF;
 }
 
+p {
+    margin: 0;
+    padding: 5px;
+}
+
+alert-bar {
+    min-width: 369px;
+}
+
+#alert-container {
+    width: 50%;
+    min-width: 320px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+#alert-container:empty {
+    height: 0px;
+}
+
+.alert-box {
+    height: 230px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.alert-box label {
+    font-weight: bold;
+}
+
+.alert-box .alert-area-description {
+    margin: 0;
+    padding: 5px;
+    height: 60px;
+    overflow: auto;
+    text-align: center;
+}
+
+.alert-radar-chart-container {
+    height: 125px;
+    width: 300px;
+}
+
+current-radar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 400px;
+    width: 50%;
+}
+
+.alert-radar-combo {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.radar-container {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+}
+
+.radar-container img {
+    width: calc(100% - 40px);
+    margin: auto;
+}
+
 .tooltip-contents {
     background-color: rgba(250, 250, 250, 0.9);
     border-radius: 10px;
