@@ -47,9 +47,15 @@ class AlertBar extends HTMLElement {
         const alertContainer = document.createElement("div")
         alertContainer.id = "alert-container"
 
+        const alertLabel = document.createElement("label")
+        alertLabel.innerText = "Alerts!"
+        alertContainer.appendChild(alertLabel)
+        
         const alertLoading = document.createElement("p")
         alertLoading.innerText = "loading..."
         alertContainer.append(alertLoading)
+
+        
 
         shadow.appendChild(alertContainer)
 
@@ -74,10 +80,18 @@ class AlertBar extends HTMLElement {
                             alertContainer.removeChild(alertContainer.firstChild)
                         }
 
+                        const alertLabel = document.createElement("label")
+                        alertLabel.innerText = "Alerts!"
+                        alertContainer.appendChild(alertLabel)
+
                         res.features.forEach(f => {
                             //Label it up
                             const newAlert = alertTemplate.content.cloneNode(true)
-                            newAlert.querySelector("label").innerText = f.properties.event
+                            const newAlertLabel = newAlert.querySelector(".alert-event-label")
+                            newAlertLabel.innerText = f.properties.event
+                            const alertIndicator = document.createElement("span")
+                            alertIndicator.className = "alert-indicator"
+                            newAlert.querySelector("summary").appendChild(alertIndicator)
                             newAlert.querySelector(".alert-area-expiration").innerText = new Date(f.properties.expires) < new Date() ? "Expired" : new Date(f.properties.expires).toLocaleString()
                             newAlert.querySelector(".alert-area-description").innerText = f.properties.areaDesc
                             
@@ -95,6 +109,8 @@ class AlertBar extends HTMLElement {
                             const urgency = urgencyEnum.findIndex(u => u === f.properties.urgency)
                             const responseIndex = responseEnum.findIndex(r => r === f.properties.response)
                             const response = responseIndex > 0 ? responseIndex : 0
+
+                            alertIndicator.style.background = colorPalette.find(c => c.temperature === (severity + certainty + urgency + response)).color
 
                             new Chart(ctx, {
                                 type: "radar",

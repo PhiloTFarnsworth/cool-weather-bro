@@ -38,8 +38,9 @@ class CurrentRadar extends HTMLElement {
             const radar = document.createElement("img")
             radar.alt = "Radar Loop for " + newValue
             radar.src = `https://radar.weather.gov/ridge/standard/${newValue}_loop.gif`
+            radar.width = 290
+            radar.height = 270
             container.appendChild(radar)
-
         }
     }
 

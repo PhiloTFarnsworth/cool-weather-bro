@@ -17,10 +17,10 @@ class PageContent extends HTMLElement {
     const style = document.createElement('style')
     style.innerText = `
         .page-container {
-          width: calc(100% - 40px);
-          height: calc(100% - 40px);
+          width: calc(100% - 20px);
+          height: calc(100% - 20px);
           overflow: auto;
-          padding: 20px;
+          padding: 10px;
           display: flex;
           flex-direction: column;
         }
