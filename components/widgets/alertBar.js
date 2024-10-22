@@ -44,18 +44,22 @@ class AlertBar extends HTMLElement {
             shadow.adoptedStyleSheets = [globalStylesCopy];
         }
 
+        const map = document.createElement("div")
+        map.id = "alert-map"
+        map.style.width = "100%"
+        map.style.height = "300px"
+        shadow.appendChild(map)
+
         const alertContainer = document.createElement("div")
         alertContainer.id = "alert-container"
 
         const alertLabel = document.createElement("label")
         alertLabel.innerText = "Alerts!"
         alertContainer.appendChild(alertLabel)
-        
+
         const alertLoading = document.createElement("p")
         alertLoading.innerText = "loading..."
         alertContainer.append(alertLoading)
-
-        
 
         shadow.appendChild(alertContainer)
 
@@ -84,6 +88,38 @@ class AlertBar extends HTMLElement {
                         alertLabel.innerText = "Alerts!"
                         alertContainer.appendChild(alertLabel)
 
+                        this._olMapView = new ol.View({
+                            center: ol.proj.fromLonLat([lon, lat]),
+                            zoom: 7,
+                            maxZoom: 7,
+                            minZoom: 7,
+                        })
+
+                        this._olMap = new ol.Map({
+                            layers: [
+                                new ol.layer.Tile({
+                                    source: new ol.source.OSM()
+                                })
+                            ],
+                            target: this.shadowRoot.querySelector("#alert-map"),
+                            view: this._olMapView
+                        });
+
+                        const alertVector = new ol.layer.Vector({
+                            style: new ol.style.Style({
+                                stroke: new ol.style.Stroke({
+                                    color: 'black',
+                                }),
+                                fill: new ol.style.Fill({
+                                    color: "rgba(250,0,0,0.5)"
+                                })
+                            }),
+                            properties: { name: "alert-area" }
+                        })
+
+                        this._olMap.addLayer(alertVector)
+
+                        let affectedZones = []
                         res.features.forEach(f => {
                             //Label it up
                             const newAlert = alertTemplate.content.cloneNode(true)
@@ -94,7 +130,18 @@ class AlertBar extends HTMLElement {
                             newAlert.querySelector("summary").appendChild(alertIndicator)
                             newAlert.querySelector(".alert-area-expiration").innerText = new Date(f.properties.expires) < new Date() ? "Expired" : new Date(f.properties.expires).toLocaleString()
                             newAlert.querySelector(".alert-area-description").innerText = f.properties.areaDesc
-                            
+
+
+                            const severity = severityEnum.findIndex(s => s === f.properties.severity)
+                            const certainty = certaintyEnum.findIndex(c => c === f.properties.certainty)
+                            const urgency = urgencyEnum.findIndex(u => u === f.properties.urgency)
+                            const responseIndex = responseEnum.findIndex(r => r === f.properties.response)
+                            const response = responseIndex > 0 ? responseIndex : 0
+
+                            //affected areas for map
+                            affectedZones = [...affectedZones, { zones: f.properties.affectedZones, severity: colorPalette.find(c => c.temperature === (severity + certainty + urgency + response)).color }]
+
+                            //Chart
                             const ctx = newAlert.querySelector('.alert-radar-chart');
 
                             alertContainer.appendChild(newAlert)
@@ -104,11 +151,6 @@ class AlertBar extends HTMLElement {
                                 Chart.getChart(ctx).destroy()
                             }
 
-                            const severity = severityEnum.findIndex(s => s === f.properties.severity)
-                            const certainty = certaintyEnum.findIndex(c => c === f.properties.certainty)
-                            const urgency = urgencyEnum.findIndex(u => u === f.properties.urgency)
-                            const responseIndex = responseEnum.findIndex(r => r === f.properties.response)
-                            const response = responseIndex > 0 ? responseIndex : 0
 
                             alertIndicator.style.background = colorPalette.find(c => c.temperature === (severity + certainty + urgency + response)).color
 
@@ -116,9 +158,9 @@ class AlertBar extends HTMLElement {
                                 type: "radar",
                                 data: {
                                     labels: [
-                                        `Severity: ${f.properties.severity}`, 
-                                        `Certainty: ${f.properties.certainty}`, 
-                                        `Urgency: ${f.properties.urgency}`, 
+                                        `Severity: ${f.properties.severity}`,
+                                        `Certainty: ${f.properties.certainty}`,
+                                        `Urgency: ${f.properties.urgency}`,
                                         `Response: ${f.properties.response}`],
                                     datasets: [
                                         {
@@ -156,8 +198,40 @@ class AlertBar extends HTMLElement {
                                     }
                                 }
                             })
-
                         })
+
+                        const uniqueZones = affectedZones.reduce((a, c) => {
+                            c.zones.forEach(z => {
+                                if (!a.includes(z)) {
+                                    a.push(z)
+                                }
+                            })
+                            return a
+                        }, [])
+                        // We want to promise.all the affected areas urls 
+                        // (we'll rely on the browser to sort out the requests, weather.gov is good about that.)
+                        Promise.all(uniqueZones.map(a => fetch(a)))
+                            .then(res => Promise.all(res.map(r => r.json())))
+                            .then(res => {
+
+                                const alertFeatures = new ol.format.GeoJSON().readFeatures(
+                                    {
+                                        type: "FeatureCollection",
+                                        features: res
+                                    },
+                                    { featureProjection: 'EPSG:3857' })
+                                const alertFeaturesCollection = new ol.Collection(alertFeatures)
+                                const source = new ol.source.Vector({ features: alertFeaturesCollection })
+
+                                this._olMap.getLayers().array_.forEach(layer => {
+                                    if (layer.get('name') && layer.get('name') == 'alert-area') {
+                                        layer.setSource(source)
+                                    }
+                                });
+                            })
+
+
+
                     })
             }
         }

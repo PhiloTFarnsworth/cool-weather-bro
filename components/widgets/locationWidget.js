@@ -1,5 +1,4 @@
 import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
-
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class LocationWidget extends HTMLElement {
@@ -261,7 +260,9 @@ class LocationWidget extends HTMLElement {
                 fetch(`../../static/data/world/countries/USA/${newValue}.geo.json`)
                     .then(res => res.json())
                     .then(res => {
-                        const stateFeatures = new ol.format.GeoJSON().readFeatures(res, { featureProjection: 'EPSG:3857' })
+                        const stateFeatures = new ol.format.GeoJSON().readFeatures(res, 
+                            { featureProjection: 'EPSG:3857' }
+                        )
                         const stateFeaturesCollection = new ol.Collection(stateFeatures)
                         const source = new ol.source.Vector({ features: stateFeaturesCollection })
 

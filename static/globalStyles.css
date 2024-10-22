@@ -62,6 +62,7 @@ alert-bar {
     width: 400px;
     min-width: 280px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     padding: 5px;
     border: 1px solid red;
@@ -102,6 +103,10 @@ weather-header {
     flex-direction: column;
     justify-content: start;
     overflow: auto;
+}
+
+.ol-overlaycontainer-stopevent {
+    display: none;
 }
 
 
@@ -155,7 +160,7 @@ current-radar {
 }
 
 .radar-container {
-    padding: 10px;
+    padding: 5px;
     border-radius: 10px;
     border: 1px solid black;
 }
