@@ -58,12 +58,11 @@ details[open] summary {
     background-color: #EFEFEF;
 }
 
-alert-bar {
+alert-bar, current-radar {
     width: 400px;
     min-width: 280px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     padding: 5px;
     border: 1px solid red;
     border-radius: 10px
@@ -91,7 +90,11 @@ weather-header {
 }
 
 .alert-radar-combo > * {
-    margin-bottom: 5px;
+    margin: 5px;
+}
+
+.page-container > * {
+    margin: auto
 }
 
 /* Alerts */
@@ -151,20 +154,15 @@ weather-header {
     width: 100%;
 }
 
-/*Radar!*/
-current-radar {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
 .radar-container {
     padding: 5px;
     border-radius: 10px;
     border: 1px solid black;
 }
 
+.radar-container img {
+    width: 100%;
+}
 
 /*Chart JS custom tooltip*/
 .tooltip-contents {
