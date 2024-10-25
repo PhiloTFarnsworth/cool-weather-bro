@@ -144,7 +144,11 @@ class HourlyChart extends HTMLElement {
                                 }),
                                 backgroundColor: function (context) {
                                     const value = context.dataset.data[context.dataIndex];
-                                    return colorPalette.find(c => value.y < c.temperature).color
+                                    if (value?.y) {
+                                        return colorPalette.find(c => value.y < c.temperature).color
+                                    } else {
+                                        return "white"
+                                    }
                                 },
                                 borderRadius: 2,
                                 categoryPercentage: 1, // Each category takes up 100% of the available space
@@ -175,7 +179,7 @@ class HourlyChart extends HTMLElement {
                                 data: slicedData.map(p => {
                                     const periodStart = new Date(p.startTime)
                                     return {
-                                        y: p?.dewpoint?.value ? ((p.dewpoint.value * (9/5)) + 32).toFixed(0) : 0,
+                                        y: p?.dewpoint?.value ? ((p.dewpoint.value * (9 / 5)) + 32).toFixed(0) : 0,
                                         x: new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(periodStart)
                                             + " "
                                             + (periodStart.getHours() < 13 ? periodStart.getHours() : periodStart.getHours() % 12)
@@ -454,7 +458,7 @@ class HourlyChart extends HTMLElement {
                         }
                     })
                 })
-            this.shadowRoot.querySelector("#chart-overflow").scroll(0,0)
+            this.shadowRoot.querySelector("#chart-overflow").scroll(0, 0)
         }
     }
 }

@@ -23,7 +23,6 @@ class PageContent extends HTMLElement {
           padding: 10px;
           display: flex;
           flex-direction: column;
-          align-items: center;
         }
       `
     pageContainer.appendChild(contentSlot)
