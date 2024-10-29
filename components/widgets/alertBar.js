@@ -30,7 +30,7 @@ const colorPalette = [
 ]
 
 class AlertBar extends HTMLElement {
-    static observedAttributes = ["data-lon", "data-lat"]
+    static observedAttributes = ["data-lon-lat"]
 
     constructor() {
         super();
@@ -50,7 +50,7 @@ class AlertBar extends HTMLElement {
         map.style.height = "300px"
         shadow.appendChild(map)
 
-        
+
         this._olMapView = new ol.View({
             zoom: 7,
             maxZoom: 7,
@@ -64,7 +64,8 @@ class AlertBar extends HTMLElement {
                 })
             ],
             target: this.shadowRoot.querySelector("#alert-map"),
-            view: this._olMapView
+            view: this._olMapView,
+            interactions: new ol.Collection()
         });
 
         const alertVector = new ol.layer.Vector({
@@ -85,18 +86,15 @@ class AlertBar extends HTMLElement {
         alertContainer.append(alertLoading)
 
         shadow.appendChild(alertContainer)
-
-        document.addEventListener("locationChange", (e) => {
-            this.setAttribute("data-lon", e.detail[0])
-            this.setAttribute("data-lat", e.detail[1])
-        })
     }
 
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if ((name === "data-lon" || name === "data-lat") && newValue) {
-            const lat = this.getAttribute("data-lat")
-            const lon = this.getAttribute("data-lon")
+        if (name === "data-lon-lat" && newValue) {
+            const lonLatString = this.getAttribute("data-lon-lat")
+            const lonLatObject = JSON.parse(lonLatString)
+            const lat = lonLatObject.lat
+            const lon = lonLatObject.lon
             if (lon && lat) {
                 fetch(`https://api.weather.gov/alerts?point=${lat},${lon}`)
                     .then(res => res.json())
@@ -129,7 +127,10 @@ class AlertBar extends HTMLElement {
                                 alertIndicator.className = "alert-indicator"
                                 newAlert.querySelector("summary").appendChild(alertIndicator)
                                 newAlert.querySelector(".alert-area-expiration").innerText = new Date(f.properties.expires) < new Date() ? "Expired" : new Date(f.properties.expires).toLocaleString()
+                                newAlert.querySelector(".alert-headline").innerText = f.properties.headline
+                                newAlert.querySelector(".alert-description").innerText = f.properties.description
                                 newAlert.querySelector(".alert-area-description").innerText = f.properties.areaDesc
+
 
                                 document.addEventListener("alert-map-hover", (e) => {
                                     if (e.detail === alertDetails.getAttribute("data-url")) {
@@ -243,14 +244,28 @@ class AlertBar extends HTMLElement {
                                 const alertFeaturesCollection = new ol.Collection(alertFeatures)
                                 const source = new ol.source.Vector({ features: alertFeaturesCollection })
                                 source.forEachFeature((f) => {
-                                    const style = new ol.style.Style({
-                                        fill: new ol.style.Fill({
-                                            color: colorPalette.find(c => c.temperature === affectedZones.find(a => a.zones.includes(f.values_["@id"])).severity).color
-                                        }),
-                                        stroke: new ol.style.Stroke({
-                                            color: 'black',
-                                        }),
-                                    })
+                                    let style
+                                    //Only style non-expired zones
+                                    if (new Date(f.values_.expirationDate) < new Date()) {
+                                        style = new ol.style.Style({
+                                            fill: new ol.style.Fill({
+                                                color: colorPalette.find(c => c.temperature === affectedZones.find(a => a.zones.includes(f.values_["@id"])).severity).color
+                                            }),
+                                            stroke: new ol.style.Stroke({
+                                                color: 'black',
+                                            }),
+                                        })
+                                    } else {
+                                        style = new ol.style.Style({
+                                            fill: new ol.style.Fill({
+                                                color: colorPalette.find(c => c.temperature === affectedZones.find(a => a.zones.includes(f.values_["@id"])).severity).color
+                                            }),
+                                            stroke: new ol.style.Stroke({
+                                                color: 'black',
+                                            }),
+                                        })
+                                        
+                                    }
                                     f.setStyle(style)
                                 })
                                 this._olMap.getLayers().array_.forEach(layer => {
@@ -284,13 +299,13 @@ class AlertBar extends HTMLElement {
 
                                 this._olMap.render()
                             })
-
-
-
+                    })
+                    .catch(error => {
+                        console.error(error)
+                        document.dispatchEvent(new CustomEvent("InvalidLocation"))
                     })
             }
         }
-
     }
 
 }

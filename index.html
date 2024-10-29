@@ -7,14 +7,13 @@
     <title>WEATHER NOW! WEATHER 4 U!</title>
     <link rel="stylesheet" href="./static/globalStyles.css" />
     <script type="module" src="./components/layout/pageContent.js"></script>
-    <script type="module" src="./components/layout/header.js"></script>
     <script type="module" src="./components/widgets/locationWidget.js"></script>
     <script type="module" src="./components/widgets/weeklyForecast.js"></script>
     <script type="module" src="./components/widgets/hourlyChart.js"></script>
     <script type="module" src="./components/widgets/forecastHeader.js"></script>
     <script type="module" src="./components/widgets/alertBar.js"></script>
     <script type="module" src="./components/widgets/currentRadar.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>  
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
     <script type="module">
         import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
@@ -42,30 +41,80 @@
             fetch(`https://api.weather.gov/points/${e.detail[1].toFixed(4)},${e.detail[0].toFixed(4)}`)
                 .then(res => res.json())
                 .then(pointInfo => {
-                    const header = document.querySelector("#forecast-header")
-                    header.setAttribute("data-city", pointInfo.properties.relativeLocation.properties.city)
-                    header.setAttribute("data-state", pointInfo.properties.relativeLocation.properties.state)
-                    const weeklyForecast = document.querySelector("#weekly-forecast")
-                    weeklyForecast.setAttribute("data-forecast-url", pointInfo.properties.forecast)
-                    const hourlyChart = document.querySelector("#hourly-chart")
-                    hourlyChart.setAttribute("data-forecast-url", pointInfo.properties.forecastHourly)
-                    const pageContent = document.querySelector("#page-content")
-                    const currentRadar = document.querySelector("current-radar")
-                    currentRadar.setAttribute("data-radar", pointInfo.properties.radarStation)
-                    pageContent.childNodes.forEach(n => {
-                        if (n.nodeName !== "#text") {
-                            n.setAttribute("data-gridX", pointInfo.properties.gridX)
-                            n.setAttribute("data-gridY", pointInfo.properties.gridY)
-                            if (n.id === "current-container") {
-                                n.childNodes.forEach(c => {
-                                    n.setAttribute("data-gridX", pointInfo.properties.gridX)
-                                    n.setAttribute("data-gridY", pointInfo.properties.gridY)
-                                })
+                    if (!pointInfo.status) {
+                        const header = document.querySelector("#forecast-header")
+                        header.setAttribute("data-city", pointInfo.properties.relativeLocation.properties.city)
+                        header.setAttribute("data-state", pointInfo.properties.relativeLocation.properties.state)
+
+                        const weeklyForecast = document.querySelector("#weekly-forecast")
+                        weeklyForecast.setAttribute("data-forecast-url", pointInfo.properties.forecast)
+
+                        const hourlyChart = document.querySelector("#hourly-chart")
+                        hourlyChart.setAttribute("data-forecast-url", pointInfo.properties.forecastHourly)
+
+                        const currentRadar = document.querySelector("current-radar")
+                        currentRadar.setAttribute("data-radar", pointInfo.properties.radarStation)
+
+                        const alertBar = document.querySelector("alert-bar")
+                        alertBar.setAttribute("data-lon-lat", JSON.stringify({lon: e.detail[0].toFixed(4), lat: e.detail[1].toFixed(4)}))
+
+                        const pageContent = document.querySelector("#page-content")
+                        pageContent.childNodes.forEach(n => {
+                            if (n.nodeName !== "#text") {
+                                n.setAttribute("data-gridX", pointInfo.properties.gridX)
+                                n.setAttribute("data-gridY", pointInfo.properties.gridY)
+                                if (n.id === "current-container") {
+                                    n.childNodes.forEach(c => {
+                                        n.setAttribute("data-gridX", pointInfo.properties.gridX)
+                                        n.setAttribute("data-gridY", pointInfo.properties.gridY)
+                                    })
+                                }
                             }
-                        }
+                        })
+                    } else {
+                        throw new Error("Forecast unavailable for this location")
                     }
-                    )
+
+                }).catch((error) => {
+                    console.error(error)
+                    document.dispatchEvent(new CustomEvent("InvalidLocation"))
                 })
+        })
+
+        document.addEventListener("InvalidLocation", () => {
+            alert("Something went wrong, helpfully providing weather for Tucson, Arizona!")
+
+            const header = document.querySelector("#forecast-header")
+            header.setAttribute("data-city", "South Tucson")
+            header.setAttribute("data-state", "AZ")
+
+            const weeklyForecast = document.querySelector("#weekly-forecast")
+            weeklyForecast.setAttribute("data-forecast-url", "https://api.weather.gov/gridpoints/TWC/91,49/forecast")
+
+            const hourlyChart = document.querySelector("#hourly-chart")
+            hourlyChart.setAttribute("data-forecast-url", "https://api.weather.gov/gridpoints/TWC/91,49/forecast/hourly")
+
+            const pageContent = document.querySelector("#page-content")
+
+            const currentRadar = document.querySelector("current-radar")
+            currentRadar.setAttribute("data-radar", "KEMX")
+
+            const alertBar = document.querySelector("alert-bar")
+            alertBar.setAttribute("data-lon-lat", JSON.stringify({lon: -110.9759, lat: 32.2229}))
+
+            pageContent.childNodes.forEach(n => {
+                if (n.nodeName !== "#text") {
+                    n.setAttribute("data-gridX", 91)
+                    n.setAttribute("data-gridY", 49)
+                    if (n.id === "current-container") {
+                        n.childNodes.forEach(c => {
+                            n.setAttribute("data-gridX", 91)
+                            n.setAttribute("data-gridY", 49)
+                        })
+                    }
+                }
+            })
+
         })
 
         if ("geolocation" in navigator) {
@@ -84,10 +133,12 @@
 </head>
 
 <body>
-    <weather-header></weather-header>
+    <h1>Cool Weather, Bro!</h1>
     <page-content id="page-content">
-        <forecast-header id="forecast-header" slot="page-slot"></forecast-header>
-        <location-widget id="location-widget" slot="page-slot"></location-widget>
+        <div class="header-controls-div" slot="page-slot">
+            <forecast-header id="forecast-header"></forecast-header>
+            <location-widget id="location-widget"></location-widget>
+        </div>
         <weekly-forecast id="weekly-forecast" slot="page-slot"></weekly-forecast>
         <hourly-chart id="hourly-chart" slot="page-slot"></hourly-chart>
         <div class="alert-radar-combo" slot="page-slot">
@@ -119,6 +170,8 @@
             <div class="alert-radar-chart-container">
                 <canvas class="alert-radar-chart"></canvas>
             </div>
+            <label class="alert-headline"></label>
+            <p class="alert-description"></p>
             <p class="alert-area-description"></p>
         </details>
     </div>

@@ -2,10 +2,36 @@
     border: 1px solid magenta;
 } */
 
+
+:root {
+    --parrot-green-darker: rgb(35,77,32,1);
+    --parrot-green-dark: rgb(54,128,45,1);
+    --parrot-green-medium: rgb(119,171,89,1);
+    --parrot-green-light: rgb(201,223,138);
+    --parrot-green-lighter: rgb(240,247,218,1);
+    --parrot-green-darker-30: rgb(35,77,32,.3);
+    --parrot-green-darker-10: rgb(35,77,32,.1);
+    --parrot-green-lighter-30: rgb(240,247,218,.3);
+    --parrot-green-lighter-10: rgb(240,247,218,.1);
+
+    --border: 1px solid var(--parrot-green-darker-30);
+}
+
+@font-face {
+    font-family: 'NotoSans';
+    font-style: normal;
+    src: url('./fonts/NotoSans-VariableFont_wdth\,wght.ttf');
+}
+
+
 body {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: var(--parrot-green-lighter-30);
+    font-family: 'NotoSans';
+    letter-spacing: .6px;
+    color: var(--parrot-green-darker);
 }
 
 page-content {
@@ -14,6 +40,43 @@ page-content {
     width: 100dvw;
     height: calc(100dvh - 50px);
     overflow: hidden;
+}
+
+
+a {
+    text-align: center;
+    color: var(--parrot-green-dark);
+}
+
+a:hover {
+    color: var(--parrot-green-medium)
+}
+
+a:visited {
+    color: var(--parrot-green-darker)
+}
+
+
+
+label {
+    text-align: center;
+}
+
+
+button {
+    background-color: var(--parrot-green-darker);
+    color: var(--parrot-green-lighter);
+    border-radius: 5px;
+    padding: 5px;
+    border: none;
+    box-shadow: 1px 1px 2px var(--parrot-green-dark);
+    font-family: 'NotoSans';
+    letter-spacing: .3px;
+}
+
+button:hover {
+    background-color: var(--parrot-green-dark);
+    box-shadow: 2px 2px 2px var(--parrot-green-dark);
 }
 
 h1,
@@ -39,46 +102,122 @@ details {
 }
 
 summary {
-    width: calc(100% - 10px);
+    width: calc(100% - 20px);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border: 1px solid black;
+    border: var(--border);
     padding: 4px;
     border-radius: 4px;
 }
 
 summary:hover {
-    background-color: #EFEFEF;
+    background-color: var(--parrot-green-lighter);
 }
 
 details[open] summary {
-    background-color: #EFEFEF;
+    background-color: var(--parrot-green-lighter);
 }
 
-alert-bar, current-radar {
-    width: 400px;
-    min-width: 280px;
-    display: flex;
-    flex-direction: column;
-    padding: 5px;
-    border: 1px solid red;
-    border-radius: 10px
-}
+
 
 /* Header */
-weather-header {
+body > h1 {
     width: 100%;
     height: 50px;
-    background-color: #5555FF;
+    background-color: var(--parrot-green-darker);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin: 0;
+    color: var(--parrot-green-lighter);
+
 }
 
-.header-container h1 {
-    color: white;
+/* Location Header */
+
+.header-controls-div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100px;
+    border: var(--border);
+    margin: 0;
+    padding: 0px 10px;
+    border-radius: 5px;
+}
+
+.header-controls-div forecast-header {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 240px;
+}
+
+/* Weekly Forecast */
+
+#daily-forecast {
+    display: flex;
+    overflow: auto;
+    height: 320px;
+    width: 100%;
+    background-color: var(--parrot-green-darker-30);
+    border-radius: 5px;
+}
+
+.forecast-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 280px;
+    min-height: 280px;
+    width: 200px;
+    min-width: 200px;
+    border: var(--border);
+    margin: 10px;
+    border-radius: 10px;
+    background-color: var(--parrot-green-dark);
+    color: var(--parrot-green-lighter);
+}
+
+.forecast-box p, .forecast-box label {
+    margin: 3px;
+    padding: 7px;
+}
+
+.forecast-box .forecast-temperature {
+    font-size: larger;
+    font-weight: bold;
+    padding: 0;
+}
+
+.forecast-box .forecast-description, .forecast-box .forecast-label {
+    padding: 0;
+}
+
+.forecast-box label {
+    font-weight: bold;
+}
+
+.forecast-box:hover {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--parrot-green-medium);
+}
+
+.forecast-box[data-active="true"] {
+    background-color: var(--parrot-green-darker);
+    width: 320px;
+    min-width: 320px;
+}
+
+
+.forecast-detailed-description {
+    max-height: 100px;
+    height: 100px;
+    overflow: auto;
+    padding-right: 10px;
 }
 
 .alert-radar-combo {
@@ -95,7 +234,34 @@ weather-header {
     margin: auto
 }
 
+/* hourly chart */
+#chart-overflow {
+    height: 320px;
+    width: 100%;
+    overflow: auto;
+    margin: auto;
+    background-color: var(--parrot-green-darker-10);
+    border-radius: 5px;
+}
+#chart-container {
+    margin: 10px;
+    height: 280px;
+    width: 2000px;
+    }
+
+
 /* Alerts */
+alert-bar, current-radar {
+    width: 400px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    border: var(--border);
+    border-radius: 5px;
+    background-color: var(--parrot-green-darker-30);
+}
+
 #alert-container {
     width: 100%;
     padding: 5px;
@@ -110,7 +276,6 @@ weather-header {
     display: none;
 }
 
-
 #alert-container:empty {
     height: 0px;
 }
@@ -123,28 +288,17 @@ weather-header {
 }
 
 .alert-box {
-    height: 40px;
     padding: 5px 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.alert-box:has(details[open]) {
-    height: 300px;
+    overflow: auto;
+    flex-shrink: 0;
 }
 
 .alert-event-label {
     font-weight: bold;
-}
-
-.alert-box .alert-area-description {
-    margin: 0;
-    padding: 5px;
-    height: 60px;
-    overflow: auto;
-    text-align: center;
 }
 
 .alert-radar-chart-container {
@@ -152,19 +306,14 @@ weather-header {
     width: 100%;
 }
 
-.radar-container {
-    padding: 5px;
-    border-radius: 10px;
-    border: 1px solid black;
-}
-
 .radar-container img {
     width: 100%;
 }
 
+
 /*Chart JS custom tooltip*/
 .tooltip-contents {
-    background-color: rgba(250, 250, 250, 0.9);
+    background-color: var(--parrot-green-lighter);
     border-radius: 10px;
     padding: 5px;
     display: flex;
@@ -187,6 +336,6 @@ weather-header {
 .tooltip-contents label:first-child {
     font-weight: bold;
     font-size: 1.1rem;
-    border-bottom: 1px solid black;
+    border-bottom: var(--border);
     margin-bottom: 2px;
 }

@@ -62,32 +62,10 @@ class HourlyChart extends HTMLElement {
         shadow.appendChild(chartLabel)
         shadow.appendChild(chartOverflow)
 
-        const style = document.createElement("style")
-
-        style.innerText = `
-        #chart-overflow {
-            height: 320px;
-            width: 100%;
-            overflow: auto;
-            margin: auto;
-        }
-        #chart-container {
-            margin: 10px;
-            height: 280px;
-            width: 2000px;
-            }
-
-        `
-        shadow.appendChild(style)
-
         document.addEventListener("forecastChange", (e) => {
             this.setAttribute("data-forecast-label", e.detail[1])
             this.setAttribute("data-forecast-start", e.detail[0])
         })
-
-    }
-
-    connectedCallback() {
 
     }
 
@@ -457,6 +435,10 @@ class HourlyChart extends HTMLElement {
 
                         }
                     })
+                })                    
+                .catch(error => {
+                    console.error(error)
+                    document.dispatchEvent(new CustomEvent("InvalidLocation"))
                 })
             this.shadowRoot.querySelector("#chart-overflow").scroll(0, 0)
         }

@@ -32,64 +32,6 @@ class WeeklyForecast extends HTMLElement {
         dailyForecast.id = "daily-forecast"
         dashboardContainer.appendChild(dailyForecast)
 
-        const style = document.createElement('style')
-        style.innerText = `
-        #daily-forecast {
-            display: flex;
-            overflow: auto;
-            height: 320px;
-            width: 100%;
-        }
-
-        .forecast-box {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 280px;
-            min-height: 280px;
-            width: 200px;
-            min-width: 200px;
-            border: 1px solid magenta;
-            margin: 10px;
-            border-radius: 10px;
-        }
-
-        .forecast-box p, .forecast-box label {
-            margin: 5px;
-        }
-
-        .forecast-box label {
-            font-weight: bold;
-        }
-
-        .forecast-box {
-            display: flex;
-            flex-direction: column;
-            background-color: rgba(40,40,255,0.5)
-        }
-
-        .forecast-box:hover {
-            display: flex;
-            flex-direction: column;
-            background-color: rgba(20,20,240,0.5)
-        }
-
-        .forecast-box[data-active="true"] {
-            background-color: rgba(255, 0, 255, 1);
-            width: 320px;
-            min-width: 320px;
-        }
-
-
-        .forecast-detailed-description {
-            max-height: 100px;
-            height: 100px;
-            overflow: auto;
-            padding-right: 10px;
-        }
-        `
-        shadow.appendChild(style)
         shadow.appendChild(forecastHeader)
         shadow.appendChild(dashboardContainer)
 
@@ -132,9 +74,28 @@ class WeeklyForecast extends HTMLElement {
                             })
                             document.dispatchEvent(new CustomEvent("forecastChange", {detail: [p.startTime, p.name]}))
                         })
+
+                        forecastBox.addEventListener("focusin", () => {
+                            forecastBox.scrollIntoView({inline: "center"})
+                            const siblings = dailyForecast.childNodes
+                            siblings.forEach(s => {
+                                if (s.nodeName !== "#text") {
+                                    if (s === forecastBox) {
+                                        s.setAttribute("data-active", "true")
+                                    } else {
+                                        s.setAttribute("data-active", "false")
+                                    }
+                                }
+                            })
+                            document.dispatchEvent(new CustomEvent("forecastChange", {detail: [p.startTime, p.name]}))
+                        })
                         dailyForecast.appendChild(newForecast)
                     })
                     
+                })
+                .catch(error => {
+                    console.error(error)
+                    document.dispatchEvent(new CustomEvent("InvalidLocation"))
                 })
         }
     }

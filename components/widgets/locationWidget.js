@@ -28,7 +28,7 @@ class LocationWidget extends HTMLElement {
         locationWidgetContainer.appendChild(dialog)
 
         const stationChangeButton = document.createElement("button")
-        stationChangeButton.innerText = "Change"
+        stationChangeButton.innerText = "Change Location"
         stationChangeButton.addEventListener("click", () => {
             dialog.showModal()
         })
@@ -160,6 +160,14 @@ class LocationWidget extends HTMLElement {
             });
 
             document.dispatchEvent(new CustomEvent("locationChange", {detail: new ol.proj.toLonLat(e.coordinate)}))
+        })
+
+        document.addEventListener("InvalidLocation", () => {
+            this._olMap.getLayers().array_.forEach(layer => {
+                if (layer.get('name') && layer.get('name') == 'location') {
+                    layer.setSource(null)
+                }
+            })
         })
 
         this._olMap.render()
