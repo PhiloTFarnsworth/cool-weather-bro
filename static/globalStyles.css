@@ -4,15 +4,15 @@
 
 
 :root {
-    --parrot-green-darker: rgb(35,77,32,1);
-    --parrot-green-dark: rgb(54,128,45,1);
-    --parrot-green-medium: rgb(119,171,89,1);
-    --parrot-green-light: rgb(201,223,138);
-    --parrot-green-lighter: rgb(240,247,218,1);
-    --parrot-green-darker-30: rgb(35,77,32,.3);
-    --parrot-green-darker-10: rgb(35,77,32,.1);
-    --parrot-green-lighter-30: rgb(240,247,218,.3);
-    --parrot-green-lighter-10: rgb(240,247,218,.1);
+    --parrot-green-darker: rgb(35, 77, 32, 1);
+    --parrot-green-dark: rgb(54, 128, 45, 1);
+    --parrot-green-medium: rgb(119, 171, 89, 1);
+    --parrot-green-light: rgb(201, 223, 138);
+    --parrot-green-lighter: rgb(240, 247, 218, 1);
+    --parrot-green-darker-30: rgb(35, 77, 32, .3);
+    --parrot-green-darker-10: rgb(35, 77, 32, .1);
+    --parrot-green-lighter-30: rgb(240, 247, 218, .3);
+    --parrot-green-lighter-10: rgb(240, 247, 218, .1);
 
     --border: 1px solid var(--parrot-green-darker-30);
 }
@@ -122,7 +122,7 @@ details[open] summary {
 
 
 /* Header */
-body > h1 {
+body>h1 {
     width: 100%;
     height: 50px;
     background-color: var(--parrot-green-darker);
@@ -154,6 +154,83 @@ body > h1 {
     max-width: 240px;
 }
 
+dialog {
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 20px;
+    width: calc(100% - 100px);
+    height: calc(100% - 100px);
+    min-height: 600px;
+    position: absolute;
+    top: 20px;
+}
+
+.dialog-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%
+}
+
+dialog button {
+    padding: 10px;
+    margin: 5px
+}
+
+dialog label {
+    margin: 5px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+}
+
+#map-info-bar {
+    position: absolute;
+    top: 0;
+    backgroundColor: blue;
+    height: 30px;
+    width: 100%;
+}
+
+#map-combo-container {
+    position: relative;
+    min-height: 300px;
+    min-width: 300px;
+    height: calc(100% - 200px);
+    width: 100%;
+}
+
+#location-map {
+    min-height: 300px;
+    min-width: 300px;
+    height: 100%;
+    width: 100%;
+}
+
+.ol-overlaycontainer-stopevent {
+    display: none;
+}
+
+.location-widget-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.location-widget-container button {
+    margin-top: 5px;
+}
+
+.location-widget-container button:last-of-type {
+    margin-bottom: 5px;
+}
+
 /* Weekly Forecast */
 
 #daily-forecast {
@@ -181,7 +258,8 @@ body > h1 {
     color: var(--parrot-green-lighter);
 }
 
-.forecast-box p, .forecast-box label {
+.forecast-box p,
+.forecast-box label {
     margin: 3px;
     padding: 7px;
 }
@@ -192,7 +270,8 @@ body > h1 {
     padding: 0;
 }
 
-.forecast-box .forecast-description, .forecast-box .forecast-label {
+.forecast-box .forecast-description,
+.forecast-box .forecast-label {
     padding: 0;
 }
 
@@ -226,11 +305,11 @@ body > h1 {
     justify-content: space-around;
 }
 
-.alert-radar-combo > * {
+.alert-radar-combo>* {
     margin: 5px;
 }
 
-.page-container > * {
+.page-container>* {
     margin: auto
 }
 
@@ -243,15 +322,17 @@ body > h1 {
     background-color: var(--parrot-green-darker-10);
     border-radius: 5px;
 }
+
 #chart-container {
     margin: 10px;
     height: 280px;
     width: 2000px;
-    }
+}
 
 
 /* Alerts */
-alert-bar, current-radar {
+alert-bar,
+current-radar {
     width: 400px;
     min-width: 280px;
     display: flex;
@@ -321,6 +402,7 @@ alert-bar, current-radar {
     justify-content: center;
     align-items: center;
     color: #0A0A0A;
+    box-shadow: 1px 1px 2px var(--parrot-green-darker-30);
 }
 
 .tooltip-contents p {

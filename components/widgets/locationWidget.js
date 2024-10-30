@@ -27,6 +27,21 @@ class LocationWidget extends HTMLElement {
         const dialog = document.createElement("dialog")
         locationWidgetContainer.appendChild(dialog)
 
+        const getLocationButton = document.createElement("button")
+        getLocationButton.innerText = "Get Location"
+        getLocationButton.addEventListener("click", () => {
+            if ("geolocation" in navigator) {
+                /* geolocation is available */
+                navigator.geolocation.getCurrentPosition((position) => {
+                    document.dispatchEvent(new CustomEvent("locationChange", { detail: [position.coords.longitude, position.coords.latitude] }))
+                })
+            } else {
+                /* geolocation IS NOT available */
+                alert("Geolocation is unavailable, please manually set location through the `change location` button")
+            }
+        })
+        locationWidgetContainer.appendChild(getLocationButton)
+
         const stationChangeButton = document.createElement("button")
         stationChangeButton.innerText = "Change Location"
         stationChangeButton.addEventListener("click", () => {
@@ -178,80 +193,6 @@ class LocationWidget extends HTMLElement {
         cancelButton.innerText = "Close"
         cancelButton.addEventListener("click", () => { dialog.close() })
         dialogContainer.appendChild(cancelButton)
-
-
-        const style = document.createElement('style')
-        style.innerText = `
-          dialog {
-            border: 1px solid black;
-            border-radius: 5px;
-            padding: 20px;
-            width: calc(100% - 100px);
-            height: calc(100% - 100px);
-            min-height: 600px;
-            position: absolute;
-            top: 20px;
-          }
-
-          .dialog-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            height: 100%
-          }
-
-          dialog button {
-            padding: 10px;
-            margin: 5px
-          }
-
-          dialog label {
-            margin: 5px;
-          }
-
-          form {
-            display: flex;
-            flex-direction: column;
-          }
-
-          label {
-            display: flex;
-            flex-direction: column;
-          }
-
-          #map-info-bar {
-            position: absolute;
-            top: 0;
-            backgroundColor: blue;
-            height: 30px;
-            width: 100%;
-          }
-
-          #map-combo-container{
-            position: relative;
-            min-height: 300px;
-            min-width: 300px;
-            height: calc(100% - 200px);
-            width: 100%;
-          }
-          
-          #location-map {
-            min-height: 300px;
-            min-width: 300px;
-            height: 100%;
-            width: 100%;
-          }
-
-          .ol-overlaycontainer-stopevent {
-            display: none;
-          }
-
-          .location-widget-container {
-            display: flex;
-
-          }
-        `
-        shadow.appendChild(style)
     }
 
     connectedCallback() {

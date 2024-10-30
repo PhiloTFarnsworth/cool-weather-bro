@@ -116,17 +116,6 @@
             })
 
         })
-
-        if ("geolocation" in navigator) {
-            /* geolocation is available */
-            console.log("geolocation")
-            navigator.geolocation.getCurrentPosition((position) => {
-                document.dispatchEvent(new CustomEvent("locationChange", { detail: [position.coords.longitude, position.coords.latitude] }))
-            })
-        } else {
-            /* geolocation IS NOT available */
-            console.log("no Geo!")
-        }
     </script>
 
 
