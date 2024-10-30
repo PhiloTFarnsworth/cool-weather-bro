@@ -39,7 +39,7 @@ page-content {
     flex-direction: column;
     width: 100dvw;
     height: calc(100dvh - 50px);
-    overflow: hidden;
+    overflow: auto;
 }
 
 

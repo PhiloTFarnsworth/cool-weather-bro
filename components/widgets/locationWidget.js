@@ -2,13 +2,11 @@ import { get, set } from 'https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm';
 //Location widget will display the current selected station or "???" if current station is unselected.  
 //When the widget is clicked, it will open a dialog to update the user's current location
 class LocationWidget extends HTMLElement {
-    static observedAttributes = ["data-state", "data-county", "data-station"]
+    static observedAttributes = ["data-state", "data-county"]
 
     constructor() {
         super();
         const stateAttr = this.getAttribute("data-state")
-        const countyAttr = this.getAttribute("data-county")
-        const stationAttr = this.getAttribute("data-station")
 
         const shadow = this.attachShadow({ mode: "open" })
 
@@ -29,11 +27,14 @@ class LocationWidget extends HTMLElement {
 
         const getLocationButton = document.createElement("button")
         getLocationButton.innerText = "Get Location"
+        
         getLocationButton.addEventListener("click", () => {
             if ("geolocation" in navigator) {
                 /* geolocation is available */
+                getLocationButton.innerText = "Loading..."
                 navigator.geolocation.getCurrentPosition((position) => {
                     document.dispatchEvent(new CustomEvent("locationChange", { detail: [position.coords.longitude, position.coords.latitude] }))
+                    getLocationButton.innerText = "Get Location"
                 })
             } else {
                 /* geolocation IS NOT available */
@@ -115,9 +116,9 @@ class LocationWidget extends HTMLElement {
 
         this._olMapView = new ol.View({
             center: ol.proj.fromLonLat([-100, 40]),
-            zoom: 3,
+            zoom: 4,
             maxZoom: 12,
-            minZoom: 3,
+            minZoom: 4,
         })
 
         this._olMap = new ol.Map({
@@ -166,7 +167,7 @@ class LocationWidget extends HTMLElement {
 
         this._olMap.on("click", (e) => {
             const marker = new ol.Feature(new ol.geom.Point(e.coordinate));
-            const source = new ol.source.Vector({ features: [marker]})
+            const source = new ol.source.Vector({ features: [marker] })
 
             this._olMap.getLayers().array_.forEach(layer => {
                 if (layer.get('name') && layer.get('name') == 'location') {
@@ -174,7 +175,7 @@ class LocationWidget extends HTMLElement {
                 }
             });
 
-            document.dispatchEvent(new CustomEvent("locationChange", {detail: new ol.proj.toLonLat(e.coordinate)}))
+            document.dispatchEvent(new CustomEvent("locationChange", { detail: new ol.proj.toLonLat(e.coordinate) }))
         })
 
         document.addEventListener("InvalidLocation", () => {
@@ -209,7 +210,7 @@ class LocationWidget extends HTMLElement {
                 fetch(`../../static/data/world/countries/USA/${newValue}.geo.json`)
                     .then(res => res.json())
                     .then(res => {
-                        const stateFeatures = new ol.format.GeoJSON().readFeatures(res, 
+                        const stateFeatures = new ol.format.GeoJSON().readFeatures(res,
                             { featureProjection: 'EPSG:3857' }
                         )
                         const stateFeaturesCollection = new ol.Collection(stateFeatures)

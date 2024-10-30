@@ -34,7 +34,6 @@ class WeeklyForecast extends HTMLElement {
 
         shadow.appendChild(forecastHeader)
         shadow.appendChild(dashboardContainer)
-
     }
 
 
