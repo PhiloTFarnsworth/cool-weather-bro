@@ -13,6 +13,7 @@
     <script type="module" src="./components/widgets/forecastHeader.js"></script>
     <script type="module" src="./components/widgets/alertBar.js"></script>
     <script type="module" src="./components/widgets/currentRadar.js"></script>
+    <script type="module" src="./components/widgets/weatherDetails.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ol@v10.2.1/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.2.1/ol.css">
     <script type="module">
@@ -56,21 +57,11 @@
                         currentRadar.setAttribute("data-radar", pointInfo.properties.radarStation)
 
                         const alertBar = document.querySelector("alert-bar")
-                        alertBar.setAttribute("data-lon-lat", JSON.stringify({lon: e.detail[0].toFixed(4), lat: e.detail[1].toFixed(4)}))
+                        alertBar.setAttribute("data-lon-lat", JSON.stringify({ lon: e.detail[0].toFixed(4), lat: e.detail[1].toFixed(4) }))
 
-                        const pageContent = document.querySelector("#page-content")
-                        pageContent.childNodes.forEach(n => {
-                            if (n.nodeName !== "#text") {
-                                n.setAttribute("data-gridX", pointInfo.properties.gridX)
-                                n.setAttribute("data-gridY", pointInfo.properties.gridY)
-                                if (n.id === "current-container") {
-                                    n.childNodes.forEach(c => {
-                                        n.setAttribute("data-gridX", pointInfo.properties.gridX)
-                                        n.setAttribute("data-gridY", pointInfo.properties.gridY)
-                                    })
-                                }
-                            }
-                        })
+                        const weatherDetails = document.querySelector("weather-details")
+                        weatherDetails.setAttribute("data-grid-url", pointInfo.properties.forecastGridData)
+
                     } else {
                         throw new Error("Forecast unavailable for this location")
                     }
@@ -100,7 +91,7 @@
             currentRadar.setAttribute("data-radar", "KEMX")
 
             const alertBar = document.querySelector("alert-bar")
-            alertBar.setAttribute("data-lon-lat", JSON.stringify({lon: -110.9759, lat: 32.2229}))
+            alertBar.setAttribute("data-lon-lat", JSON.stringify({ lon: -110.9759, lat: 32.2229 }))
 
             pageContent.childNodes.forEach(n => {
                 if (n.nodeName !== "#text") {
@@ -131,11 +122,12 @@
         <weekly-forecast id="weekly-forecast" slot="page-slot"></weekly-forecast>
         <hourly-chart id="hourly-chart" slot="page-slot"></hourly-chart>
         <div class="alert-radar-combo" slot="page-slot">
+            <weather-details id="weather-details"></weather-details>
             <alert-bar id="alert-bar"></alert-bar>
             <current-radar id="current-radar"></current-radar>
         </div>
 
-        <weather-details id="weather-details" slot="page-slot"></weather-details>
+
     </page-content>
 </body>
 
@@ -170,7 +162,9 @@
     <div class="weather-detail-container">
         <label></label>
         <p></p>
-        <canvas></canvas>
+        <div style="height: 60px;">
+            <canvas id="details-canvas"></canvas>
+        </div>
     </div>
 </template>
 

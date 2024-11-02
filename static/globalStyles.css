@@ -333,7 +333,8 @@ label {
 
 /* Alerts */
 alert-bar,
-current-radar {
+current-radar,
+weather-details {
     width: 400px;
     min-width: 280px;
     display: flex;
@@ -342,6 +343,8 @@ current-radar {
     border: var(--border);
     border-radius: 5px;
     background-color: var(--parrot-green-darker-30);
+    max-height: 400px;
+    overflow: auto;
 }
 
 #alert-container {
@@ -390,6 +393,22 @@ current-radar {
 
 .radar-container img {
     width: 100%;
+}
+
+.weather-detail-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 5px;
+    background-color: var(--parrot-green-darker-10);
+    border-radius: 5px;
+    margin: 5px 0px;
+}
+
+.weather-detail-container>* {
+    width: calc(100% - 10px);
+    text-align: center;
 }
 
 
