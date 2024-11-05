@@ -113,6 +113,7 @@ class WeatherDetails extends HTMLElement {
                                             label: camelCaseToWords(pKey),
                                             type: "bar",
                                             data: [handler?.transformer ? handler.transformer(pVal.values[0].value) : pVal.values[0].value],
+                                            base: bounds[0]
                                         }]
                                     },
                                     options: {
@@ -130,8 +131,11 @@ class WeatherDetails extends HTMLElement {
                                                 max: bounds[1],
                                                 grid: {
                                                     display: false,
-
                                                 },
+                                                beginAtZero: false,
+                                                ticks: {
+                                                    beginAtZero: false
+                                                }
                                             },
                                             y: {
                                                 display: false,
