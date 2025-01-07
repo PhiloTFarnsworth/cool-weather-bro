@@ -6,40 +6,53 @@ function degToCompass(num) {
     return arr[(val % 16)];
 }
 
-const unitHandling = [
-    { name: "degC", transformer: (value) => ((Number(value) * 9 / 5) + 32).toFixed(0), bounds: [-50, 150], label: "° F" },
-    { name: "degree_(angle)", transformer: (value) => degToCompass(value) },
-    { name: "percent", transformer: (value) => value, bounds: [0, 100], label: "%" },
-    { name: "mm", transformer: (value) => (value / 25.4).toFixed(2), label: " in", bounds: [0, 24] },
-    { name: "m", transformer: (value) => (value * 3.281).toFixed(2), label: " ft", bounds: [0, 10] },
-    { name: "km_h-1", transformer: (value) => (value / 1.609).toFixed(2), bounds: [0, 100], label: " MPH" }
-]
+
 
 const colorPalette = [
-    { "temperature": -50, "color": "rgba(0, 0, 139, .8)" },    // Dark Blue
-    { "temperature": -40, "color": "rgba(0, 0, 255, .8)" },    // Blue
-    { "temperature": -30, "color": "rgba(30, 144, 255, .8)" }, // Dodger Blue
-    { "temperature": -20, "color": "rgba(0, 191, 255, .8)" },  // Deep Sky Blue
-    { "temperature": -10, "color": "rgba(135, 206, 250, .8)" },// Light Sky Blue
-    { "temperature": 0, "color": "rgba(176, 224, 230, .8)" },  // Powder Blue
-    { "temperature": 10, "color": "rgba(173, 216, 230, .8)" }, // Light Blue
-    { "temperature": 20, "color": "rgba(135, 206, 235, .8)" }, // Sky Blue
-    { "temperature": 30, "color": "rgba(70, 130, 180, .8)" },  // Steel Blue
-    { "temperature": 40, "color": "rgba(95, 158, 160, .8)" },  // Cadet Blue
-    { "temperature": 50, "color": "rgba(102, 205, 170, .8)" }, // Medium Aquamarine
-    { "temperature": 60, "color": "rgba(50, 205, 50, .8)" },   // Lime Green
-    { "temperature": 65, "color": "rgba(0, 250, 154, .8)" },   // Medium Spring Green
-    { "temperature": 70, "color": "rgba(0, 255, 127, .8)" },   // Spring Green
-    { "temperature": 75, "color": "rgba(124, 252, 0, .8)" },   // Lawn Green
-    { "temperature": 80, "color": "rgba(173, 255, 47, .8)" },  // Green Yellow
-    { "temperature": 85, "color": "rgba(255, 215, 0, .8)" },   // Gold
-    { "temperature": 90, "color": "rgba(255, 202, 0, .8)" },   // Orange
-    { "temperature": 95, "color": "rgba(255, 69, 0, .8)" },    // Orange Red
-    { "temperature": 100, "color": "rgba(255, 34, 0, .8)" },   // Red-orange
-    { "temperature": 105, "color": "rgba(255, 0, 0, .8)" },    // Red
-    { "temperature": 110, "color": "rgba(204, 0, 0, .8)" },    // Dark Red
-    { "temperature": 120, "color": "rgba(139, 0, 0, .8)" },    // Darker Red
-    { "temperature": 130, "color": "rgba(139, 0, 51, .8)" }    // Dark Redish/Purple
+    { "unit": -50, "color": "rgba(0, 0, 139, .8)" },    // Dark Blue
+    { "unit": -40, "color": "rgba(0, 0, 255, .8)" },    // Blue
+    { "unit": -30, "color": "rgba(30, 144, 255, .8)" }, // Dodger Blue
+    { "unit": -20, "color": "rgba(0, 191, 255, .8)" },  // Deep Sky Blue
+    { "unit": -10, "color": "rgba(135, 206, 250, .8)" },// Light Sky Blue
+    { "unit": 0, "color": "rgba(176, 224, 230, .8)" },  // Powder Blue
+    { "unit": 10, "color": "rgba(173, 216, 230, .8)" }, // Light Blue
+    { "unit": 20, "color": "rgba(135, 206, 235, .8)" }, // Sky Blue
+    { "unit": 30, "color": "rgba(70, 130, 180, .8)" },  // Steel Blue
+    { "unit": 40, "color": "rgba(95, 158, 160, .8)" },  // Cadet Blue
+    { "unit": 50, "color": "rgba(102, 205, 170, .8)" }, // Medium Aquamarine
+    { "unit": 60, "color": "rgba(50, 205, 50, .8)" },   // Lime Green
+    { "unit": 65, "color": "rgba(0, 250, 154, .8)" },   // Medium Spring Green
+    { "unit": 70, "color": "rgba(0, 255, 127, .8)" },   // Spring Green
+    { "unit": 75, "color": "rgba(124, 252, 0, .8)" },   // Lawn Green
+    { "unit": 80, "color": "rgba(173, 255, 47, .8)" },  // Green Yellow
+    { "unit": 85, "color": "rgba(255, 215, 0, .8)" },   // Gold
+    { "unit": 90, "color": "rgba(255, 202, 0, .8)" },   // Orange
+    { "unit": 95, "color": "rgba(255, 69, 0, .8)" },    // Orange Red
+    { "unit": 100, "color": "rgba(255, 34, 0, .8)" },   // Red-orange
+    { "unit": 105, "color": "rgba(255, 0, 0, .8)" },    // Red
+    { "unit": 110, "color": "rgba(204, 0, 0, .8)" },    // Dark Red
+    { "unit": 120, "color": "rgba(139, 0, 0, .8)" },    // Darker Red
+    { "unit": 130, "color": "rgba(139, 0, 51, .8)" }    // Dark Redish/Purple
+]
+
+
+const percipPalette = [
+    { "unit": 0, "color": "rgba(176, 224, 230, .8)" },  // Powder Blue
+    { "unit": 1, "color": "rgba(70, 130, 180, .8)" },  // Steel Blue
+    { "unit": 2, "color": "rgba(102, 205, 170, .8)" }, // Medium Aquamarine
+    { "unit": 4, "color": "rgba(50, 205, 50, .8)" },   // Lime Green
+    { "unit": 8, "color": "rgba(255, 215, 0, .8)" },   // Gold
+    { "unit": 12, "color": "rgba(255, 0, 0, .8)" },    // Red
+    { "unit": 100, "color": "rgba(139, 0, 51, .8)" }    // Dark Redish/Purple
+]
+
+const unitHandling = [
+    { name: "degC", transformer: (value) => ((Number(value) * 9 / 5) + 32).toFixed(0), bounds: [-50, 150], label: "° F", palette: colorPalette },
+    { name: "degree_(angle)", transformer: (value) => degToCompass(value), palette: ["rgba(70, 130, 180, .8)"] },
+    { name: "percent", transformer: (value) => value, bounds: [0, 100], label: "%", palette: colorPalette },
+    { name: "mm", transformer: (value) => (value / 25.4).toFixed(2), label: " in", bounds: [0, 24], palette: percipPalette },
+    { name: "m", transformer: (value) => (value * 3.281).toFixed(2), label: " ft", bounds: [0, 10000], palette: ["rgba(70, 130, 180, .8)"]},
+    { name: "km_h-1", transformer: (value) => (value / 1.609).toFixed(2), bounds: [0, 100], label: " MPH", palette: colorPalette}
 ]
 
 function camelCaseToWords(s) {
@@ -113,6 +126,17 @@ class WeatherDetails extends HTMLElement {
                                             label: camelCaseToWords(pKey),
                                             type: "bar",
                                             data: [handler?.transformer ? handler.transformer(pVal.values[0].value) : pVal.values[0].value],
+                                            backgroundColor: function (context) {
+                                                const value = context.dataset.data[context.dataIndex];
+                                                if (value) {
+                                                    if (handler.palette.length > 1) {
+                                                        return handler.palette.find(c => value < c.unit).color
+                                                    }
+                                                    return handler.palette[0]                                                    
+                                                } else {
+                                                    return "rgba(70, 130, 180, .8)"
+                                                }
+                                            },
                                             base: bounds[0]
                                         }]
                                     },
